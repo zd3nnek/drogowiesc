@@ -55,7 +55,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 </div>
 
 <button id="start">Start podróży</button>
-<p class="hint">Ekran musi pozostać włączony (aplikacja prosi telefon o niewygaszanie). Muzyka z innej aplikacji może grać w tle.</p>
+<p class="hint">Telefon zapyta o lokalizację dopiero po naciśnięciu Start. Ekran musi pozostać włączony (aplikacja prosi telefon o niewygaszanie). Muzyka z innej aplikacji może grać w tle.</p>
 
 <details>
   <summary>Ustawienia</summary>
@@ -219,6 +219,8 @@ function curMode() {
 }
 
 function onPosition(p) {
+  // Słaby sygnał (np. w budynku): pozycja skacze o dziesiątki metrów, więc nie liczymy z niej prędkości ani kursu.
+  if (p.acc > 50 && st.pos) { st.acc = p.acc; return; }
   if (st.lastPos) {
     const d = dist(st.lastPos, p), dt = (p.t - st.lastPos.t) / 1000;
     if (p.speed == null && dt > 0) p.speed = d / dt;
@@ -521,6 +523,14 @@ function aiNarration(p, m) {
   job.catch(() => {}).finally(() => pending.delete(key));
   return job;
 }
+// Gotowe opowieści napisane wcześniej (plik narracje.json obok strony): { "<pageid>": { "t": tytuł, "car": tekst } }.
+// Mają pierwszeństwo przed AI na żywo i przed Wikipedią. Tekst "POMIŃ" = nie mówić o tym miejscu.
+let READY = {};
+fetch('narracje.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { READY = j || {}; }).catch(() => {});
+function readyNarration(p, m) {
+  const r = READY[p.id];
+  return r ? (m === 'walk' ? r.walk || r.car : r.car) || null : null;
+}
 const withTimeout = (pr, ms) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('za długo')), ms))]);
 const aiOn = () => S.ai && S.apiKey;
 
@@ -558,9 +568,16 @@ async function announce(c) {
   busy = true;
   const m = curMode(), p = c.p;
   heard[p.id] = Date.now(); LS.set('heard', heard);
-  let text = null, src = 'wiki', err = '';
+  let text = null, src = 'wiki', err = '', silent = false;
   try {
-    if (aiOn()) {
+    const ready = readyNarration(p, m);
+    if (ready && ready.replace(/[.\s]/g, '').toUpperCase() === 'POMIŃ') {
+      addJournal({ p, m, d: c.d, s: c.s, src: 'gotowe', text: '(gotowe: pominięte — nic ciekawego w źródle)', skipped: true });
+      silent = true; // nic nie powiedziano, więc bez przerwy
+      return;
+    }
+    if (ready) { text = ready; src = 'gotowe'; }
+    else if (aiOn()) {
       try {
         text = await withTimeout(aiNarration(p, m), 15000); src = 'ai';
         if (text.replace(/[.\s]/g, '').toUpperCase() === 'POMIŃ') {
@@ -580,7 +597,8 @@ async function announce(c) {
   } catch (e) {
     setStatus('Błąd narracji: ' + e.message);
   } finally {
-    lastSpokeAt = clock(); busy = false;
+    if (!silent) lastSpokeAt = clock();
+    busy = false;
   }
 }
 
@@ -595,7 +613,7 @@ function addJournal({ p, m, d, s, src, intro = '', text, err = '', skipped = fal
 function showNow(e) {
   const url = `https://${S.lang}.wikipedia.org/?curid=${e.id}`;
   $('#now').innerHTML = `<span class="intro"></span> <span class="txt"></span>
-    <div class="meta">${e.src === 'ai' ? 'AI' : 'Wikipedia'} · ${e.dist} m · ciekawość ${e.score}${e.err ? ' · AI: ' + esc(e.err) : ''} · <a href="${url}" target="_blank" rel="noopener">źródło</a></div>`;
+    <div class="meta">${e.src === 'ai' ? 'AI' : e.src === 'gotowe' ? 'gotowa opowieść' : 'Wikipedia'} · ${e.dist} m · ciekawość ${e.score}${e.err ? ' · AI: ' + esc(e.err) : ''} · <a href="${url}" target="_blank" rel="noopener">źródło</a></div>`;
   $('#now .intro').textContent = e.intro;
   $('#now .txt').textContent = e.text;
   syncVotes();
@@ -620,7 +638,7 @@ function tick() {
   inspectNearby(m, H);
   const gap = MODES[m].gap * parseFloat(S.freq) * 1000;
   // Przygotuj z wyprzedzeniem opowieści dla najlepszych kandydatów na horyzoncie ×2.
-  if (aiOn()) candidates(m, H * 2).slice(0, 2).forEach(c => { aiNarration(c.p, m).catch(() => {}); });
+  if (aiOn()) candidates(m, H * 2).slice(0, 2).forEach(c => { if (!readyNarration(c.p, m)) aiNarration(c.p, m).catch(() => {}); });
   const waitS = Math.max(0, Math.ceil((lastSpokeAt + gap - clock()) / 1000));
   if (!busy && waitS === 0) { const c = candidates(m, H)[0]; if (c) announce(c); }
   setStatus(`${sim ? 'SYMULACJA · ' : ''}GPS ±${Math.round(st.acc || 0)} m · ${Math.round(st.speed * 3.6)} km/h · kurs ${st.heading == null ? '—' : Math.round(st.heading) + '°'} · ${MODES[m].label} · miejsc: ${POIS.size}` +
@@ -680,7 +698,7 @@ function updateMap(H) {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
     poiLayer = L.layerGroup().addTo(map);
   }
-  if (!st.pos) return;
+  if (!st.pos || H == null) return;
   const ll = [st.pos.lat, st.pos.lon];
   if (!meMarker) { meMarker = L.circleMarker(ll, { radius: 8, color: '#fff', fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map); horizonCircle = L.circle(ll, { radius: H, color: '#f5b041', weight: 1, fill: false }).addTo(map); }
   meMarker.setLatLng(ll); horizonCircle.setLatLng(ll).setRadius(H);
@@ -736,7 +754,12 @@ function initUI() {
     $('#dMap').open = true; mapOpen = true;
     start();
   };
-  $('#dMap').addEventListener('toggle', () => { mapOpen = $('#dMap').open; if (mapOpen && map) setTimeout(() => map.invalidateSize(), 50); });
+  $('#dMap').addEventListener('toggle', () => {
+    mapOpen = $('#dMap').open;
+    if (!mapOpen) return;
+    if (!map) updateMap();
+    if (map) setTimeout(() => map.invalidateSize(), 50);
+  });
   if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
   renderJournal();
 }
