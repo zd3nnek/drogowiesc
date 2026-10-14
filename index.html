@@ -85,6 +85,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
     <label>Tempo mowy: <span id="vRate"></span>
       <input type="range" id="sRate" min="0.7" max="1.4" step="0.05">
     </label>
+    <label><input type="checkbox" id="sDuck"> Przyciszaj muzykę na czas lektora (eksperyment)</label>
     <button id="bTestVoice">Testuj głos</button>
     <hr style="border-color:var(--line);margin:14px 0">
     <label><input type="checkbox" id="sAi"> Opowieści z AI (Claude)</label>
@@ -176,7 +177,7 @@ const ROUTES = [
 // ---------- Ustawienia ----------
 const S = Object.assign({
   mode: 'auto', interests: INTERESTS.filter(i => i.id !== 'miasta').map(i => i.id),
-  freq: '1', minScore: 3.5, voice: '', rate: 1.0, ai: false, apiKey: '', model: 'claude-opus-5-5', lang: 'pl'
+  freq: '1', minScore: 3.5, voice: '', rate: 1.0, duck: false, ai: false, apiKey: '', model: 'claude-opus-5-5', lang: 'pl'
 }, LS.get('settings', {}));
 const saveS = () => LS.set('settings', S);
 
@@ -542,9 +543,28 @@ function loadVoices() {
   sel.innerHTML = '<option value="">Domyślny systemowy</option>' + voices.map(v => `<option value="${v.voiceURI}">${v.name}</option>`).join('');
   sel.value = S.voice;
 }
+// Eksperyment: mowa (speechSynthesis) nie prosi Androida o „fokus audio”, więc muzyka gra dalej tak samo głośno.
+// Zwykły element <audio> o niego prosi — grając ciszę na czas mowy, może skłonić YouTube/Spotify do przyciszenia lub pauzy.
+let duckEl = null;
+function silentWav() {
+  const n = 8000, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  const str = (o, s) => [...s].forEach((c, i) => b[o + i] = c.charCodeAt(0));
+  str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVEfmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true);
+  v.setUint16(32, 1, true); v.setUint16(34, 8, true); str(36, 'data'); v.setUint32(40, n, true); b.fill(128, 44);
+  return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
+}
+function duck(on) {
+  if (!S.duck) return;
+  try {
+    if (!duckEl) { duckEl = new Audio(silentWav()); duckEl.loop = true; }
+    if (on) { duckEl.currentTime = 0; duckEl.play().catch(() => {}); } else duckEl.pause();
+  } catch (e) {}
+}
 function speak(text) {
+  duck(true);
   return new Promise(res => {
-    if (!('speechSynthesis' in window)) return res();
+    if (!('speechSynthesis' in window)) { duck(false); return res(); }
     speechSynthesis.cancel(); stopSpeech = false; speaking = true;
     // Krótkie kawałki: długie wypowiedzi bywają ucinane przez Chrome.
     const parts = []; let buf = '';
@@ -552,7 +572,7 @@ function speak(text) {
     if (buf) parts.push(buf);
     let i = 0;
     const next = () => {
-      if (i >= parts.length || stopSpeech) { speaking = false; return res(); }
+      if (i >= parts.length || stopSpeech) { speaking = false; duck(false); return res(); }
       const u = new SpeechSynthesisUtterance(parts[i++]);
       u.lang = S.lang === 'pl' ? 'pl-PL' : 'en-US';
       const v = voices.find(v => v.voiceURI === S.voice); if (v) u.voice = v;
@@ -728,6 +748,7 @@ function initUI() {
   bind('#sMin', 'minScore', parseFloat, () => $('#vMin').textContent = S.minScore.toFixed(1));
   bind('#sRate', 'rate', parseFloat, () => $('#vRate').textContent = S.rate.toFixed(2));
   $('#vMin').textContent = S.minScore.toFixed(1); $('#vRate').textContent = S.rate.toFixed(2);
+  $('#sDuck').checked = !!S.duck; $('#sDuck').addEventListener('change', e => { S.duck = e.target.checked; saveS(); });
   $('#sAi').checked = S.ai; $('#sAi').addEventListener('change', e => { S.ai = e.target.checked; saveS(); });
   $('#simRoute').innerHTML = ROUTES.map((r, i) => `<option value="${i}">${r.name}</option>`).join('');
 
