@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Odkrywca — prototyp</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#111418;--card:#1b2026;--line:#2a313a;--fg:#e9edf1;--mute:#93a0ad;--acc:#f5b041;--ok:#4cc38a;--bad:#e5645c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:12px 16px 40px;max-width:720px;margin-inline:auto}
+h1{font-size:20px;margin:4px 0 2px}
+h1 small{color:var(--mute);font-weight:400;font-size:13px}
+#status{color:var(--mute);font-size:13px;min-height:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+#now{font-size:19px;min-height:84px}
+#now .intro{color:var(--acc);font-weight:600}
+#now .meta{color:var(--mute);font-size:12px;margin-top:8px}
+#now a{color:var(--mute)}
+button{font:inherit;color:var(--fg);background:#262d36;border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+button:active{transform:scale(.98)}
+#start{width:100%;font-size:22px;font-weight:700;padding:20px;background:var(--acc);color:#1a1300;border:0}
+#start.on{background:var(--bad);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>button{flex:1}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 0;padding:0 14px}
+summary{padding:14px 0;cursor:pointer;font-weight:600}
+details>div{padding-bottom:14px}
+label{display:block;margin:8px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{margin:0;background:#232a33;border:1px solid var(--line);border-radius:20px;padding:6px 10px;font-size:14px}
+input[type=range]{width:100%}
+input[type=text],input[type=password],select{width:100%;font:inherit;background:#0d1014;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.hint{color:var(--mute);font-size:13px}
+#map{height:360px;border-radius:10px;margin-top:6px}
+#journal .e{border-top:1px solid var(--line);padding:8px 0;font-size:14px}
+#journal .e b{color:var(--acc)}
+#journal .e .m{color:var(--mute);font-size:12px}
+.vote.sel{background:var(--ok);color:#06210f}
+.vote.bad.sel{background:var(--bad);color:#fff}
+</style>
+</head>
+<body>
+
+<h1>Odkrywca <small>prototyp · faza 0</small></h1>
+<div id="status">Gotowy. Naciśnij Start.</div>
+
+<div class="card" id="now"><span class="hint">Tu pojawi się to, co mówi lektor.</span></div>
+
+<div class="row" style="margin-bottom:10px">
+  <button id="bRepeat">↺ Powtórz</button>
+  <button id="bSkip">⏭ Pomiń</button>
+  <button id="bUp" class="vote">👍</button>
+  <button id="bDown" class="vote bad">👎</button>
+</div>
+
+<button id="start">Start podróży</button>
+<p class="hint">Ekran musi pozostać włączony (aplikacja prosi telefon o niewygaszanie). Muzyka z innej aplikacji może grać w tle.</p>
+
+<details>
+  <summary>Ustawienia</summary>
+  <div>
+    <label>Tryb podróży
+      <select id="sMode">
+        <option value="auto">Automatycznie (z prędkości)</option>
+        <option value="car">Samochód / motocykl</option>
+        <option value="bike">Rower</option>
+        <option value="walk">Spacer</option>
+      </select>
+    </label>
+    <div>Zainteresowania</div>
+    <div class="chips" id="sInterests"></div>
+    <label>Jak często mówić
+      <select id="sFreq">
+        <option value="1.6">Rzadko</option>
+        <option value="1" selected>Normalnie</option>
+        <option value="0.6">Często</option>
+      </select>
+    </label>
+    <label>Próg ciekawości: <span id="vMin"></span>
+      <input type="range" id="sMin" min="2" max="6" step="0.1">
+      <span class="hint">Wyżej = tylko najsłynniejsze miejsca.</span>
+    </label>
+    <label>Głos <select id="sVoice"></select></label>
+    <label>Tempo mowy: <span id="vRate"></span>
+      <input type="range" id="sRate" min="0.7" max="1.4" step="0.05">
+    </label>
+    <button id="bTestVoice">Testuj głos</button>
+    <hr style="border-color:var(--line);margin:14px 0">
+    <label><input type="checkbox" id="sAi"> Opowieści z AI (Claude)</label>
+    <label>Klucz API Anthropic
+      <input type="password" id="sKey" placeholder="sk-ant-..." autocomplete="off">
+      <span class="hint">Zostaje tylko w tej przeglądarce. Bez klucza lektor czyta skrót z Wikipedii.</span>
+    </label>
+    <label>Model
+      <select id="sModel">
+        <option value="claude-opus-5-5">Claude Opus 5.5 (najlepszy, domyślny)</option>
+        <option value="claude-sonnet-5-5">Claude Sonnet 5.5</option>
+        <option value="claude-haiku-5-5">Claude Haiku 5.5 (najtańszy, najszybszy)</option>
+      </select>
+    </label>
+  </div>
+</details>
+
+<details id="dSim">
+  <summary>Symulacja trasy (test na komputerze)</summary>
+  <div>
+    <label>Trasa <select id="simRoute"></select></label>
+    <label>Przyspieszenie czasu
+      <select id="simMult"><option>1</option><option>3</option><option selected>10</option><option>30</option></select>
+    </label>
+    <button id="bSim">Start symulacji</button>
+    <p class="hint">Trasy są przybliżone (odcinki proste). Symulacja zastępuje GPS.</p>
+  </div>
+</details>
+
+<details id="dMap">
+  <summary>Mapa (podgląd)</summary>
+  <div><div id="map"></div>
+    <p class="hint">● pomarańczowe = kandydaci · zielone = opowiedziane · szare = odfiltrowane</p></div>
+</details>
+
+<details>
+  <summary>Dziennik</summary>
+  <div>
+    <div class="row">
+      <button id="bCopy">Kopiuj dziennik</button>
+      <button id="bClear">Wyczyść</button>
+      <button id="bResetHeard">Zapomnij usłyszane</button>
+    </div>
+    <div id="journal"></div>
+  </div>
+</details>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('odk_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('odk_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+// ---------- Kategorie (klasyfikacja po tytule + opisie z Wikidata) ----------
+const INTERESTS = [
+  { id: 'historia', label: 'Historia i zabytki', re: /zam(ek|ku|ki)\b|ruin|grodzisk|twierdz|\bfort|bitw|cmentarz wojenn|kurhan|zabyt|dwór|dworek|obronn|mauzoleum|pomnik(?! przyrody)/i },
+  { id: 'sakralne', label: 'Kościoły i klasztory', re: /kości[oó]ł|klasztor|kaplic|synagog|cerk(iew|wi)|opactw|bazylik|katedr|sanktuari|zbór|meczet|pustelni/i },
+  { id: 'architektura', label: 'Architektura', re: /pałac|ratusz|kamienic|wież[ay](?! widokow)|\bmost\b|willa|brama|mury miejskie|rynek/i },
+  { id: 'natura', label: 'Natura', re: /rezerwat|park krajobrazow|park narodow|jezior|zalew|jaskini|wąwóz|skał|pomnik przyrody|wodospad|źródło|torfowisk|puszcz|dolina|ostoja/i },
+  { id: 'gory', label: 'Góry i widoki', re: /\bgóra\b|szczyt|pasmo|wzgórz|punkt widokow|wieża widokow|przełęcz|gołoborz|grzbiet/i },
+  { id: 'technika', label: 'Technika i przemysł', re: /hut[aąy]\b|walcowni|kopalni|młyn|zapor|elektrowni|kamienioło|wiadukt|kolej wąskotor|cegieln|kuźni|wielki piec|zakład|fabryk|browar|gorzelni|wiatrak|latarni|zabytek techniki/i },
+  { id: 'kultura', label: 'Muzea i kultura', re: /muzeum|skansen|galeri|teatr|amfiteatr|centrum nauki/i },
+  { id: 'rodzina', label: 'Atrakcje rodzinne', re: /park rozrywki|\bzoo\b|ogród zoologiczny|dinozaur|jurapark|aquapark|park linowy|ogród botaniczny/i },
+  { id: 'miasta', label: 'Miasta (wjazd)', re: /\bmiasto\b/i }
+];
+// Opisy, które z góry odrzucamy. Wsie nie: są oceniane osobno (patrz inspectVillage).
+const VILLAGE = /^(wieś|część wsi|przysiółek|osada|kolonia)(?=[\s,]|$)/i; // \b nie działa po „ś”
+const EXCLUDE = /^(gmina|powiat|sołectwo|ulica|aleja|plac|przystanek|stacja|szkoła|parafia|dekanat|obręb|okręg|klub|stowarzyszenie|przedsiębiorstwo|spółka|stadion|osiedle|dzielnica|część miasta|szpital|jednostka|droga|linia kolejowa|rzeka|potok|struga|kanał|centrum handlowe|galeria handlowa|sklep|hotel|uczelnia|uniwersytet|szkoła wyższa|politechnika|akademia|biurowiec|budynek biurowy|hala|lotnisko|lądowisko|sąd|urząd|komisariat|więzienie|zakład karny|elektrociepłownia|oczyszczalnia|wysypisko|nadajnik|maszt|stacja paliw|zajezdnia|węzeł drogowy|obwodnica)/i;
+// Rzeki/potoki wycinamy, bo przecina się je co chwilę; wrócą, gdy będzie lepszy ranking.
+
+const MODES = {
+  car:  { label: 'samochód', radius: 10000, gap: 150, cone: 75,  words: '1–2 zdania, maksymalnie 35 słów', sentences: 1, chars: 230 },
+  bike: { label: 'rower',    radius: 4000,  gap: 90,  cone: 100, words: '2 zdania, maksymalnie 45 słów', sentences: 2, chars: 300 },
+  walk: { label: 'spacer',   radius: 1000,  gap: 60,  cone: 180, words: '3–4 zdania, maksymalnie 80 słów', sentences: 3, chars: 450 }
+};
+
+const ROUTES = [
+  { name: 'Kielce → Opatów → Krzyżtopór (auto, 90 km/h)', kmh: 90,
+    pts: [[50.8703,20.6275],[50.8530,20.7600],[50.8150,20.9200],[50.7766,21.0832],[50.7860,21.2400],[50.8000,21.4250],[50.7500,21.3600],[50.7180,21.3180],[50.6900,21.2850]] },
+  { name: 'Kunów → Śnieżkowice → Waśniów → Nowa Słupia → Bieliny → Kielce (auto, 70 km/h)', kmh: 70,
+    pts: [[50.9547,21.2794],[50.9100,21.2458],[50.8992,21.2231],[50.8639,21.0900],[50.8581,21.0219],[50.8492,20.9222],[50.8669,20.8903],[50.9036,20.7278],[50.8717,20.6314]] },
+  { name: 'Sandomierz, starówka (spacer, 4,5 km/h)', kmh: 4.5,
+    pts: [[50.6797,21.7489],[50.6818,21.7506],[50.6800,21.7470],[50.6775,21.7462],[50.6790,21.7440]] }
+];
+
+// ---------- Ustawienia ----------
+const S = Object.assign({
+  mode: 'auto', interests: INTERESTS.filter(i => i.id !== 'miasta').map(i => i.id),
+  freq: '1', minScore: 3.5, voice: '', rate: 1.0, ai: false, apiKey: '', model: 'claude-opus-5-5', lang: 'pl'
+}, LS.get('settings', {}));
+const saveS = () => LS.set('settings', S);
+
+// ---------- Geometria ----------
+const R = 6371000, toR = Math.PI / 180;
+function dist(a, b) {
+  const dLat = (b.lat - a.lat) * toR, dLon = (b.lon - a.lon) * toR;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+function bearing(a, b) {
+  const y = Math.sin((b.lon - a.lon) * toR) * Math.cos(b.lat * toR);
+  const x = Math.cos(a.lat * toR) * Math.sin(b.lat * toR) - Math.sin(a.lat * toR) * Math.cos(b.lat * toR) * Math.cos((b.lon - a.lon) * toR);
+  return (Math.atan2(y, x) / toR + 360) % 360;
+}
+function dest(a, brg, d) {
+  const δ = d / R, θ = brg * toR, φ1 = a.lat * toR, λ1 = a.lon * toR;
+  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ));
+  const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
+  return { lat: φ2 / toR, lon: λ2 / toR };
+}
+const relAngle = (brg, heading) => ((brg - heading + 540) % 360) - 180;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const median = arr => { const s = [...arr].sort((a, b) => a - b); return s.length ? s[s.length >> 1] : 0; };
+
+// ---------- Stan ----------
+const st = { pos: null, lastPos: null, heading: null, speed: 0, speeds: [], acc: null };
+const POIS = new Map();
+let running = false, sim = null, simClock = 0, watchId = null, timer = null;
+let busy = false, lastSpokeAt = 0, lastFetch = null, fetching = false, fetchBackoffUntil = 0;
+let current = null, wakeLock = null;
+let heard = LS.get('heard', {});
+let journal = LS.get('journal', []);
+const clock = () => sim ? simClock : Date.now();
+
+function curMode() {
+  if (S.mode !== 'auto') return S.mode;
+  const kmh = st.speed * 3.6;
+  return kmh < 6 ? 'walk' : kmh < 22 ? 'bike' : 'car';
+}
+
+function onPosition(p) {
+  if (st.lastPos) {
+    const d = dist(st.lastPos, p), dt = (p.t - st.lastPos.t) / 1000;
+    if (p.speed == null && dt > 0) p.speed = d / dt;
+    if (d >= 12) { if (!(p.heading != null && !isNaN(p.heading) && p.speed > 1.5)) st.heading = bearing(st.lastPos, p); st.lastPos = p; }
+  } else st.lastPos = p;
+  if (p.heading != null && !isNaN(p.heading) && p.speed > 1.5) st.heading = p.heading;
+  st.speeds.push(p.speed || 0); if (st.speeds.length > 8) st.speeds.shift();
+  st.speed = median(st.speeds);
+  st.pos = p; st.acc = p.acc;
+}
+
+// ---------- Wikipedia ----------
+async function wikiQuery(params) {
+  const u = new URL(`https://${S.lang}.wikipedia.org/w/api.php`);
+  const all = { action: 'query', format: 'json', formatversion: '2', origin: '*', ...params };
+  for (const k in all) u.searchParams.set(k, all[k]);
+  for (let attempt = 0; ; attempt++) {
+    const r = await fetch(u);
+    if (r.ok) return r.json();
+    // 429 = za dużo zapytań: odczekaj, ile każe serwer, i spróbuj ponownie.
+    if (r.status !== 429 || attempt >= 3) throw new Error('Wikipedia HTTP ' + r.status);
+    const wait = (parseFloat(r.headers.get('retry-after')) || 2) * 1000 * (attempt + 1);
+    await new Promise(res => setTimeout(res, wait));
+  }
+}
+
+async function fetchArea(c, radius) {
+  const j = await wikiQuery({ generator: 'geosearch', ggscoord: `${c.lat}|${c.lon}`, ggsradius: String(Math.min(radius, 10000)),
+    ggslimit: '200', prop: 'coordinates|description|info', colimit: 'max' });
+  const fresh = [];
+  for (const pg of (j.query && j.query.pages) || []) {
+    let p = POIS.get(pg.pageid);
+    if (!p) { p = { id: pg.pageid, title: pg.title, cats: [], views: null }; POIS.set(pg.pageid, p); }
+    if (pg.coordinates) { p.lat = pg.coordinates[0].lat; p.lon = pg.coordinates[0].lon; }
+    if (pg.description) p.desc = pg.description;
+    if (pg.length) p.length = pg.length;
+    classify(p);
+    if (!p.excluded && !p.village && p.views == null) fresh.push(p);
+  }
+  // Odsłony tylko dla miejsc, które przeszły filtr (API oddaje je w małych porcjach).
+  for (let i = 0; i < fresh.length; i += 50) {
+    const chunk = fresh.slice(i, i + 50);
+    let cont = {};
+    for (let k = 0; k < 10; k++) {
+      const v = await wikiQuery({ prop: 'pageviews', pvipdays: '30', pageids: chunk.map(p => p.id).join('|'), ...cont });
+      for (const pg of (v.query && v.query.pages) || []) {
+        const p = POIS.get(pg.pageid);
+        if (p && pg.pageviews) { p.views = Object.values(pg.pageviews).reduce((s, x) => s + (x || 0), 0); classify(p); }
+      }
+      if (!v.continue) break;
+      cont = v.continue;
+    }
+  }
+}
+
+function classify(p) {
+  const text = p.title + ' ' + (p.desc || '');
+  p.excluded = !!(p.desc && EXCLUDE.test(p.desc)) || /^(Gmina|Powiat|Lista|Uniwersytet|Politechnika|Akademia|Szkoła|Galeria [A-ZĄĆĘŁŃÓŚŹŻ]\w+$)/.test(p.title);
+  p.village = !!(p.desc && VILLAGE.test(p.desc));
+  p.cats = p.gemCats || INTERESTS.filter(i => i.re.test(text)).map(i => i.id);
+  // Sława: odsłony z 30 dni + długość artykułu.
+  p.base = Math.log10((p.views || 0) + 10) + (Math.log10(p.length || 1000) - 3) * 0.8;
+}
+
+const extractCache = new Map();
+async function getExtract(id) {
+  if (extractCache.has(id)) return extractCache.get(id);
+  const j = await wikiQuery({ prop: 'extracts', exintro: '1', explaintext: '1', pageids: String(id) });
+  const pg = j.query && j.query.pages && j.query.pages[0];
+  const t = ((pg && pg.extract) || '').slice(0, 3500);
+  extractCache.set(id, t);
+  return t;
+}
+
+// ---------- Perełki we wsiach ----------
+// Artykuł o wsi czytamy dopiero, gdy wieś jest na trasie przed nami: sekcje Zabytki/Historia/Legendy + słowa-klucze.
+const GEMS = [
+  { re: /dw[óo]r(?!sk)|dworek|zespół dworsk|park dworsk|pałac|zam(ek|ku)\b|ruin/i, w: 2, cat: 'historia', label: 'dwór/pałac/zamek' },
+  { re: /drewnian\w* kości|kości\w* drewnian|modrzewiow/i, w: 2, cat: 'sakralne', label: 'drewniany kościół' },
+  { re: /legend|podani[ea]/i, w: 2, cat: 'historia', label: 'legenda' },
+  { re: /bitw|potyczk|powstań|partyzan/i, w: 1.5, cat: 'historia', label: 'bitwa/powstanie' },
+  { re: /grodzisk|kurhan|cmentarzysk/i, w: 1.5, cat: 'historia', label: 'grodzisko/kurhan' },
+  { re: /młyn|wiatrak|kuźni|\bhut[aąy]\b|wielki piec|walcowni|kopalni|tartak|kamienioło/i, w: 1.5, cat: 'technika', label: 'technika' },
+  { re: /rezerwat|pomnik\w* przyrody|jaskini|wąwóz|wodospad/i, w: 1, cat: 'natura', label: 'przyroda' },
+  { re: /muzeum|izba regionaln|izba pamięci|skansen/i, w: 1, cat: 'kultura', label: 'muzeum' },
+  { re: /urodził się|urodziła się|mieszkał|tworzył|pochowan/i, w: 1, cat: 'historia', label: 'znana postać' },
+  { re: /kości[oó]ł|kaplic|cerk/i, w: 0.5, cat: 'sakralne', label: 'kościół/kaplica' }
+];
+const GEM_SECTIONS = /zabyt|histori|legend|ciekawost|turysty|przyrod|atrakcj|architektur|kultur|znane osoby|ludzie/i;
+const inspecting = new Set();
+
+function cleanSection(t) {
+  return t.split('\n').map(l => l.trim()
+      .replace(/,?\s*nr rej\.?:?\s*[^,;\n]*?(z \d{1,2}\.\d{1,2}\.\d{4}( i \d{1,2}\.\d{1,2}\.\d{4})?)?(?=[,;.]|$)/gi, '')
+      .replace(/\s*\([^)]*\)/g, ''))
+    .filter(l => l.length > 3)
+    .map(l => /[.!?:]$/.test(l) ? l : l + '.')
+    .join(' ').replace(/\s+/g, ' ').replace(/,\s*\./g, '.').replace(/\.{2,}/g, '.').trim();
+}
+
+async function inspectVillage(p) {
+  const j = await wikiQuery({ prop: 'extracts', explaintext: '1', exsectionformat: 'wiki', pageids: String(p.id) });
+  const pg = j.query && j.query.pages && j.query.pages[0];
+  // Podział na sekcje: [wstęp, '==', tytuł, treść, '==', tytuł, treść, ...]
+  const parts = ((pg && pg.extract) || '').split(/\n(={2,})\s*(.+?)\s*\1\n/);
+  let txt = '';
+  for (let i = 1; i + 2 < parts.length; i += 3) if (GEM_SECTIONS.test(parts[i + 1])) txt += '\n' + parts[i + 2];
+  txt = cleanSection(txt).slice(0, 3000);
+  let gem = 0; const cats = new Set(), hits = [];
+  for (const g of GEMS) if (g.re.test(txt)) { gem += g.w; cats.add(g.cat); hits.push(g.label); }
+  gem += Math.min(2, (txt.match(/rejestr\w* zabytków/gi) || []).length * 0.5);
+  p.gem = gem; p.gemText = txt; p.gemHits = hits;
+  if (cats.size) p.gemCats = p.cats = [...cats];
+}
+
+function inspectNearby(m, H) {
+  if (inspecting.size || !st.pos) return;
+  let best = null;
+  for (const p of POIS.values()) {
+    if (!p.village || p.gem != null || p.lat == null || heardRecently(p.id)) continue;
+    const d = dist(st.pos, p);
+    if (d > H * 2) continue;
+    if (st.heading != null && m !== 'walk' && d > 250 && Math.abs(relAngle(bearing(st.pos, p), st.heading)) > MODES[m].cone) continue;
+    if (!best || d < best.d) best = { p, d };
+  }
+  if (!best) return;
+  const p = best.p;
+  inspecting.add(p.id);
+  inspectVillage(p).catch(() => { p.gem = 0; }).finally(() => inspecting.delete(p.id));
+}
+
+function maybeFetch() {
+  if (fetching || !st.pos || clock() < fetchBackoffUntil) return;
+  const m = curMode(), r = MODES[m].radius;
+  let c = st.pos;
+  if (m !== 'walk' && st.heading != null) c = dest(st.pos, st.heading, r * 0.5);
+  if (lastFetch && lastFetch.mode === m && dist(lastFetch.c, c) < r * 0.4) return;
+  fetching = true;
+  fetchArea(c, r)
+    .then(() => { lastFetch = { c, mode: m }; })
+    .catch(e => { fetchBackoffUntil = clock() + 30000; setStatus('Błąd pobierania z Wikipedii: ' + e.message); })
+    .finally(() => { fetching = false; });
+}
+
+// ---------- Ranking ----------
+const heardRecently = id => heard[id] && Date.now() - heard[id] < 30 * 864e5;
+function interest(p) {
+  if (p.excluded || p.lat == null || heardRecently(p.id)) return -1;
+  if (p.village) {
+    // Wieś liczy się dopiero po przeczytaniu artykułu i tylko z co najmniej jedną konkretną perełką.
+    if (p.gem == null || p.gem < 2) return -1;
+    const s = 2.6 + Math.min(p.gem, 6) * 0.25 + (Math.log10((p.views || 0) + 10) - 1) * 0.3;
+    return p.cats.some(c => S.interests.includes(c)) ? s : -1;
+  }
+  if (!p.cats.length) return p.base * 0.75;
+  return p.cats.some(c => S.interests.includes(c)) ? p.base : -1;
+}
+function horizon(m) {
+  const v = st.speed;
+  return m === 'car' ? clamp(v * 75, 700, 3000) : m === 'bike' ? clamp(v * 90, 300, 1200) : 160;
+}
+// Próg ruchomy: po 5 min ciszy obniża się o 0,3 (najwyżej o 1,2), żeby na pustkowiu nie milczeć godzinę.
+function threshold() {
+  const silentMin = Math.max(0, (clock() - lastSpokeAt) / 60000 - 5);
+  return S.minScore - Math.min(1.2, Math.floor(silentMin / 5) * 0.3 + (silentMin > 0 ? 0.3 : 0));
+}
+function candidates(m, H) {
+  const out = [], min = threshold();
+  for (const p of POIS.values()) {
+    const s = interest(p);
+    if (s < min) continue;
+    const d = dist(st.pos, p);
+    // Sławne miejsca mają większy zasięg (do 1,6× horyzontu), góry widać z daleka (do 4,5×).
+    let reach = H;
+    if (m !== 'walk') reach = p.cats.includes('gory') ? H * clamp(1 + (s - 3.5) * 2, 1, 4.5) : H * clamp(1 + (s - 3.5) * 0.6, 1, 1.6);
+    if (d > reach) continue;
+    let a = null;
+    if (st.heading != null && m !== 'walk') {
+      a = relAngle(bearing(st.pos, p), st.heading);
+      if (Math.abs(a) > MODES[m].cone && d > 250) continue;
+    }
+    out.push({ p, d, a, s, sc: s - (d / reach) * 0.6 });
+  }
+  return out.sort((x, y) => y.sc - x.sc);
+}
+
+// ---------- Narracja ----------
+function plural(n, one, few, many) {
+  const n10 = n % 10, n100 = n % 100;
+  if (n === 1) return one;
+  return n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14) ? few : many;
+}
+function fmtDist(d) {
+  if (d < 500) return `około ${Math.round(d / 50) * 50} metrów`;
+  if (d < 950) return `około ${Math.round(d / 100) * 100} metrów`;
+  const r = Math.round(d / 500) / 2;
+  if (r === 1) return 'około kilometra';
+  if (r === 1.5) return 'około półtora kilometra';
+  if (r % 1) return `około ${Math.floor(r)} i pół kilometra`;
+  return `około ${r} ${plural(r, 'kilometra', 'kilometrów', 'kilometrów')}`;
+}
+function dirPhrase(d, a, m) {
+  if (m === 'walk' || a == null) return d < 120 ? 'Tuż obok' : `Niedaleko, ${fmtDist(d)} stąd`;
+  const side = Math.abs(a) <= 20 ? 'Przed tobą' : a > 0 ? 'Po prawej' : 'Po lewej';
+  return d < 350 ? `${side}, tuż obok` : `${side}, ${fmtDist(d)}`;
+}
+const cleanTitle = t => t.replace(/\s*\([^)]*\)$/, '');
+// Skróty, po których kropka nie kończy zdania.
+const ABBR = /(?:^|\s)(św|bł|m\.in|tzw|ok|r|w|ww|im|pw|gm|woj|pow|ul|dr|ks|o|zm|ur|wg|np|itd|itp|p\.n\.e|n\.e|n\.p\.m|tys|mln|mld|km|ha|pl|al|gen|płk|kpt|prof|hr|abp|bp|kard|poł|ćw|wyd|nr|rej|par|wsp|zob|jw|tj|dz|wym|pn|płd|wsch|zach)\.$/i;
+function splitSentences(t) {
+  const raw = t.split(/(?<=[.!?])\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ0-9])/), out = [];
+  for (const s of raw) {
+    if (out.length && (ABBR.test(out[out.length - 1]) || /\s[A-ZĄĆĘŁŃÓŚŹŻ]\.$/.test(out[out.length - 1]))) out[out.length - 1] += ' ' + s;
+    else out.push(s);
+  }
+  return out;
+}
+
+async function wikiNarration(p, m) {
+  if (p.village) {
+    // Ze wsi czytamy tylko zdania z perełkami, a nie położenie administracyjne.
+    // Najpierw zdania z najmocniejszą perełką; potem czytamy je w kolejności z artykułu.
+    const max = MODES[m].chars;
+    const ranked = splitSentences(p.gemText || '')
+      .map((s, i) => ({ s, i, w: GEMS.reduce((a, g) => a + (g.re.test(s) ? g.w : 0), 0) }))
+      .filter(x => x.w > 0 && x.s.length <= max)
+      .sort((a, b) => b.w - a.w || a.i - b.i);
+    const out = [];
+    for (const x of ranked) {
+      if (out.length >= MODES[m].sentences) break;
+      if ([...out, x].reduce((a, y) => a + y.s.length + 1, 0) <= max) out.push(x);
+    }
+    return out.sort((a, b) => a.i - b.i).map(x => x.s).join(' ');
+  }
+  let t = await getExtract(p.id);
+  t = t.replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+  if (!t) return p.desc ? p.desc.charAt(0).toUpperCase() + p.desc.slice(1) + '.' : '';
+  const max = MODES[m].chars;
+  const sents = splitSentences(t).slice(0, MODES[m].sentences);
+  while (sents.length > 1 && sents.join(' ').length > max) sents.pop();
+  let s = sents.join(' ').replace(/^[^–—]{0,140}\s[–—]\s/, '');
+  if (s.length > max) { // jedno tasiemcowe zdanie: utnij na ostatnim przecinku przed limitem
+    const cut = s.lastIndexOf(',', max);
+    s = (cut > 60 ? s.slice(0, cut) : s.slice(0, s.lastIndexOf(' ', max))) + '.';
+  }
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const SYSTEM = `Jesteś głosem przewodnika w aplikacji, która opowiada podróżnym o miejscach, które właśnie mijają. Twój tekst zostanie odczytany przez syntezator mowy zaraz po zapowiedzi w stylu „Po prawej, około kilometra: <nazwa miejsca>.”
+
+Zasady:
+- Korzystaj wyłącznie z faktów zawartych w źródle. Nie dodawaj niczego z własnej wiedzy, nawet jeśli jesteś pewien.
+- Jeśli źródło podaje coś jako legendę, podanie lub tradycję, powiedz to wprost, np. „według legendy”.
+- Wybierz jedną, najciekawszą rzecz, coś zaskakującego albo dającego się wyobrazić. Nie wyliczaj faktów ani dat po kolei.
+- Pisz językiem mówionym: krótkie zdania, bez nawiasów, skrótów, list i cudzysłowów. Daty i liczby tylko wtedy, gdy są naprawdę ciekawe.
+- Nie zaczynaj od nazwy miejsca ani od „To jest”, bo nazwa padła już w zapowiedzi.
+- Bez powitań, pytań do słuchacza i ogólników typu „warto odwiedzić”.
+- Jeśli źródło na to pozwala, dopasuj kąt opowieści do zainteresowań słuchacza.
+- Jeśli w źródle nie ma nic ciekawego dla podróżnego, odpowiedz dokładnie: POMIŃ
+
+Odpowiedz samym tekstem do odczytania.`;
+
+let AnthropicCls = null, client = null, clientKey = '';
+async function getClient() {
+  if (!AnthropicCls) AnthropicCls = (await import('https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.131.0/+esm')).default;
+  if (!client || clientKey !== S.apiKey) { client = new AnthropicCls({ apiKey: S.apiKey, dangerouslyAllowBrowser: true }); clientKey = S.apiKey; }
+  return client;
+}
+
+const narrCache = LS.get('narr', {});
+const pending = new Map();
+function aiNarration(p, m) {
+  const key = `${p.id}|${m === 'walk' ? 'long' : 'short'}|${S.model}|v1`;
+  if (narrCache[key]) return Promise.resolve(narrCache[key]);
+  if (pending.has(key)) return pending.get(key);
+  const job = (async () => {
+    const src = p.village ? p.gemText : await getExtract(p.id);
+    if (!src) throw new Error('brak tekstu źródła');
+    const villageHint = p.village ? '\nTo wieś. Opowiedz o najciekawszej rzeczy, którą w niej widać albo która się tu wydarzyła, a nie o położeniu administracyjnym. Zapowiedź brzmi „wieś <nazwa>”.' : '';
+    const labels = INTERESTS.filter(i => S.interests.includes(i.id)).map(i => i.label.toLowerCase()).join(', ');
+    const params = {
+      model: S.model, max_tokens: 2000, output_config: { effort: 'low' }, system: SYSTEM,
+      messages: [{ role: 'user', content:
+        `Miejsce: ${cleanTitle(p.title)}\nKrótki opis: ${p.desc || 'brak'}\nSłuchacz: ${MODES[m].label}, długość tekstu: ${MODES[m].words}\nZainteresowania słuchacza: ${labels}${villageHint}\n\nŹródło (Wikipedia, ${p.village ? 'sekcje o zabytkach i historii wsi' : 'wstęp artykułu'}):\n"""\n${src}\n"""` }]
+    };
+    const c = await getClient();
+    // Opus i Sonnet: przy odmowie serwer sam przełącza na model zapasowy.
+    const resp = S.model === 'claude-haiku-5-5'
+      ? await c.messages.create(params)
+      : await c.beta.messages.create({ ...params, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
+    if (resp.stop_reason === 'refusal') throw new Error('model odmówił');
+    const text = resp.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    if (!text) throw new Error('pusta odpowiedź');
+    narrCache[key] = text;
+    const keys = Object.keys(narrCache); if (keys.length > 400) delete narrCache[keys[0]];
+    LS.set('narr', narrCache);
+    return text;
+  })();
+  pending.set(key, job);
+  job.catch(() => {}).finally(() => pending.delete(key));
+  return job;
+}
+const withTimeout = (pr, ms) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('za długo')), ms))]);
+const aiOn = () => S.ai && S.apiKey;
+
+// ---------- Mowa ----------
+let voices = [], stopSpeech = false, speaking = false;
+function loadVoices() {
+  voices = speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith(S.lang));
+  const sel = $('#sVoice');
+  sel.innerHTML = '<option value="">Domyślny systemowy</option>' + voices.map(v => `<option value="${v.voiceURI}">${v.name}</option>`).join('');
+  sel.value = S.voice;
+}
+function speak(text) {
+  return new Promise(res => {
+    if (!('speechSynthesis' in window)) return res();
+    speechSynthesis.cancel(); stopSpeech = false; speaking = true;
+    // Krótkie kawałki: długie wypowiedzi bywają ucinane przez Chrome.
+    const parts = []; let buf = '';
+    for (const s of splitSentences(text)) { if ((buf + ' ' + s).length > 200 && buf) { parts.push(buf); buf = s; } else buf = buf ? buf + ' ' + s : s; }
+    if (buf) parts.push(buf);
+    let i = 0;
+    const next = () => {
+      if (i >= parts.length || stopSpeech) { speaking = false; return res(); }
+      const u = new SpeechSynthesisUtterance(parts[i++]);
+      u.lang = S.lang === 'pl' ? 'pl-PL' : 'en-US';
+      const v = voices.find(v => v.voiceURI === S.voice); if (v) u.voice = v;
+      u.rate = S.rate; u.onend = next; u.onerror = next;
+      speechSynthesis.speak(u);
+    };
+    next();
+  });
+}
+
+// ---------- Zapowiedź ----------
+async function announce(c) {
+  busy = true;
+  const m = curMode(), p = c.p;
+  heard[p.id] = Date.now(); LS.set('heard', heard);
+  let text = null, src = 'wiki', err = '';
+  try {
+    if (aiOn()) {
+      try {
+        text = await withTimeout(aiNarration(p, m), 15000); src = 'ai';
+        if (text.replace(/[.\s]/g, '').toUpperCase() === 'POMIŃ') {
+          addJournal({ p, m, d: c.d, s: c.s, src: 'ai', text: '(AI: pominięte — nic ciekawego w źródle)', skipped: true });
+          return;
+        }
+      } catch (e) { err = e.message; text = null; }
+    }
+    if (!text) { text = await wikiNarration(p, m); src = 'wiki'; }
+    if (!text) return;
+    const d = dist(st.pos, p);
+    const a = st.heading != null ? relAngle(bearing(st.pos, p), st.heading) : null;
+    const intro = `${dirPhrase(d, a, m)}: ${p.village ? 'wieś ' : ''}${cleanTitle(p.title)}.`;
+    current = addJournal({ p, m, d, s: c.s, src, intro, text, err });
+    showNow(current);
+    await speak(`${intro} ${text}`);
+  } catch (e) {
+    setStatus('Błąd narracji: ' + e.message);
+  } finally {
+    lastSpokeAt = clock(); busy = false;
+  }
+}
+
+function addJournal({ p, m, d, s, src, intro = '', text, err = '', skipped = false }) {
+  const e = { t: new Date().toISOString(), id: p.id, title: p.title, desc: p.desc || '', mode: m, dist: Math.round(d),
+    kmh: Math.round(st.speed * 3.6), score: +s.toFixed(2), views30: p.views, cats: p.cats, src, intro, text, err, skipped, vote: 0 };
+  journal.unshift(e); if (journal.length > 200) journal.pop();
+  LS.set('journal', journal); renderJournal();
+  return e;
+}
+
+function showNow(e) {
+  const url = `https://${S.lang}.wikipedia.org/?curid=${e.id}`;
+  $('#now').innerHTML = `<span class="intro"></span> <span class="txt"></span>
+    <div class="meta">${e.src === 'ai' ? 'AI' : 'Wikipedia'} · ${e.dist} m · ciekawość ${e.score}${e.err ? ' · AI: ' + esc(e.err) : ''} · <a href="${url}" target="_blank" rel="noopener">źródło</a></div>`;
+  $('#now .intro').textContent = e.intro;
+  $('#now .txt').textContent = e.text;
+  syncVotes();
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function syncVotes() {
+  $('#bUp').classList.toggle('sel', !!current && current.vote === 1);
+  $('#bDown').classList.toggle('sel', !!current && current.vote === -1);
+}
+function renderJournal() {
+  $('#journal').innerHTML = journal.slice(0, 40).map(e =>
+    `<div class="e"><b>${esc(e.title)}</b> ${e.vote === 1 ? '👍' : e.vote === -1 ? '👎' : ''}<br>${esc(e.text)}
+     <div class="m">${e.t.slice(11, 16)} · ${e.mode} · ${e.kmh} km/h · ${e.dist} m · ${e.src} · ciekawość ${e.score}</div></div>`).join('');
+}
+
+// ---------- Pętla ----------
+function tick() {
+  if (sim) stepSim();
+  if (!st.pos) { setStatus('Czekam na GPS…'); return; }
+  maybeFetch();
+  const m = curMode(), H = horizon(m);
+  inspectNearby(m, H);
+  const gap = MODES[m].gap * parseFloat(S.freq) * 1000;
+  // Przygotuj z wyprzedzeniem opowieści dla najlepszych kandydatów na horyzoncie ×2.
+  if (aiOn()) candidates(m, H * 2).slice(0, 2).forEach(c => { aiNarration(c.p, m).catch(() => {}); });
+  const waitS = Math.max(0, Math.ceil((lastSpokeAt + gap - clock()) / 1000));
+  if (!busy && waitS === 0) { const c = candidates(m, H)[0]; if (c) announce(c); }
+  setStatus(`${sim ? 'SYMULACJA · ' : ''}GPS ±${Math.round(st.acc || 0)} m · ${Math.round(st.speed * 3.6)} km/h · kurs ${st.heading == null ? '—' : Math.round(st.heading) + '°'} · ${MODES[m].label} · miejsc: ${POIS.size}` +
+    (busy ? ' · mówi' : waitS ? ` · przerwa ${waitS} s` : ' · szuka'));
+  if (mapOpen) updateMap(H);
+}
+function setStatus(t) { $('#status').textContent = t; }
+
+async function start() {
+  running = true; $('#start').textContent = 'Stop'; $('#start').classList.add('on');
+  speak('Odkrywca włączony.');
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  if (!sim) {
+    if (!navigator.geolocation) { setStatus('Ta przeglądarka nie udostępnia GPS.'); return; }
+    watchId = navigator.geolocation.watchPosition(
+      g => onPosition({ lat: g.coords.latitude, lon: g.coords.longitude, speed: g.coords.speed, heading: g.coords.heading, acc: g.coords.accuracy, t: Date.now() }),
+      e => setStatus('GPS: ' + e.message + (e.code === 1 ? ' (brak zgody na lokalizację)' : '')),
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
+  }
+  lastSpokeAt = clock() - MODES.car.gap * 1000 + 15000; // pierwsza opowieść po ~15 s
+  timer = setInterval(tick, 1000);
+}
+function stop() {
+  running = false; $('#start').textContent = 'Start podróży'; $('#start').classList.remove('on');
+  if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null;
+  clearInterval(timer); timer = null; sim = null; $('#bSim').textContent = 'Start symulacji';
+  stopSpeech = true; speechSynthesis.cancel();
+  if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  setStatus('Zatrzymano.');
+}
+document.addEventListener('visibilitychange', async () => {
+  if (running && document.visibilityState === 'visible' && 'wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
+});
+
+// ---------- Symulacja ----------
+function stepSim() {
+  const r = sim.route, mps = r.kmh / 3.6, dt = 1000 * sim.mult;
+  simClock += dt;
+  let left = mps * dt / 1000;
+  while (left > 0 && sim.seg < r.pts.length - 1) {
+    const a = { lat: r.pts[sim.seg][0], lon: r.pts[sim.seg][1] }, b = { lat: r.pts[sim.seg + 1][0], lon: r.pts[sim.seg + 1][1] };
+    const segLen = dist(a, b), remain = segLen - sim.off;
+    if (left < remain) { sim.off += left; left = 0; } else { left -= remain; sim.seg++; sim.off = 0; }
+  }
+  if (sim.seg >= r.pts.length - 1) { setStatus('Koniec trasy symulacji.'); stop(); return; }
+  const a = { lat: r.pts[sim.seg][0], lon: r.pts[sim.seg][1] }, b = { lat: r.pts[sim.seg + 1][0], lon: r.pts[sim.seg + 1][1] };
+  const brg = bearing(a, b), p = dest(a, brg, sim.off);
+  onPosition({ lat: p.lat, lon: p.lon, speed: mps, heading: brg, acc: 5, t: simClock });
+}
+
+// ---------- Mapa ----------
+let map = null, mapOpen = false, meMarker = null, headLine = null, horizonCircle = null, poiLayer = null;
+function updateMap(H) {
+  if (!window.L) return;
+  if (!map) {
+    map = L.map('map').setView([st.pos ? st.pos.lat : 50.8, st.pos ? st.pos.lon : 21.2], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
+    poiLayer = L.layerGroup().addTo(map);
+  }
+  if (!st.pos) return;
+  const ll = [st.pos.lat, st.pos.lon];
+  if (!meMarker) { meMarker = L.circleMarker(ll, { radius: 8, color: '#fff', fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map); horizonCircle = L.circle(ll, { radius: H, color: '#f5b041', weight: 1, fill: false }).addTo(map); }
+  meMarker.setLatLng(ll); horizonCircle.setLatLng(ll).setRadius(H);
+  if (st.heading != null) {
+    const h = dest(st.pos, st.heading, H);
+    if (!headLine) headLine = L.polyline([ll, [h.lat, h.lon]], { color: '#3b82f6' }).addTo(map); else headLine.setLatLngs([ll, [h.lat, h.lon]]);
+  }
+  map.panTo(ll, { animate: false });
+  poiLayer.clearLayers();
+  const b = map.getBounds();
+  for (const p of POIS.values()) {
+    if (p.lat == null || !b.contains([p.lat, p.lon])) continue;
+    const s = interest(p), done = heardRecently(p.id);
+    const col = done ? '#4cc38a' : s >= S.minScore ? '#f5b041' : '#5b6672';
+    L.circleMarker([p.lat, p.lon], { radius: done || s >= S.minScore ? 6 : 3, color: col, fillColor: col, fillOpacity: .8, weight: 1 })
+      .bindTooltip(`${p.title} · ${p.desc || ''} · ${s.toFixed(2)}`).addTo(poiLayer);
+  }
+}
+
+// ---------- UI ----------
+function initUI() {
+  $('#sInterests').innerHTML = INTERESTS.map(i => `<label><input type="checkbox" value="${i.id}" ${S.interests.includes(i.id) ? 'checked' : ''}> ${i.label}</label>`).join('');
+  $('#sInterests').addEventListener('change', () => { S.interests = [...document.querySelectorAll('#sInterests input:checked')].map(x => x.value); saveS(); });
+  const bind = (sel, key, cast = v => v, after) => { const el = $(sel); el.value = S[key]; el.addEventListener('input', () => { S[key] = cast(el.value); saveS(); after && after(); }); };
+  bind('#sMode', 'mode'); bind('#sFreq', 'freq'); bind('#sModel', 'model'); bind('#sVoice', 'voice');
+  bind('#sKey', 'apiKey', v => v.trim());
+  bind('#sMin', 'minScore', parseFloat, () => $('#vMin').textContent = S.minScore.toFixed(1));
+  bind('#sRate', 'rate', parseFloat, () => $('#vRate').textContent = S.rate.toFixed(2));
+  $('#vMin').textContent = S.minScore.toFixed(1); $('#vRate').textContent = S.rate.toFixed(2);
+  $('#sAi').checked = S.ai; $('#sAi').addEventListener('change', e => { S.ai = e.target.checked; saveS(); });
+  $('#simRoute').innerHTML = ROUTES.map((r, i) => `<option value="${i}">${r.name}</option>`).join('');
+
+  $('#start').onclick = () => running ? stop() : start();
+  $('#bTestVoice').onclick = () => speak('Po prawej, około kilometra: Zamek Krzyżtopór. Tak brzmi Twój przewodnik.');
+  $('#bSkip').onclick = () => { stopSpeech = true; speechSynthesis.cancel(); };
+  $('#bRepeat').onclick = () => { if (current) speak(`${current.intro} ${current.text}`); };
+  const vote = v => { if (!current) return; current.vote = current.vote === v ? 0 : v; LS.set('journal', journal); renderJournal(); syncVotes(); };
+  $('#bUp').onclick = () => vote(1); $('#bDown').onclick = () => vote(-1);
+  $('#bCopy').onclick = async () => {
+    const txt = JSON.stringify(journal, null, 1);
+    try { await navigator.clipboard.writeText(txt); setStatus('Dziennik skopiowany (' + journal.length + ' wpisów).'); }
+    catch (e) { setStatus('Nie udało się skopiować do schowka.'); }
+  };
+  $('#bClear').onclick = () => { journal = []; LS.set('journal', journal); renderJournal(); };
+  $('#bResetHeard').onclick = () => { heard = {}; LS.set('heard', heard); setStatus('Usłyszane miejsca zapomniane.'); };
+  $('#bSim').onclick = () => {
+    if (sim) { stop(); return; }
+    if (running) stop();
+    st.pos = st.lastPos = st.heading = null; st.speeds = []; lastFetch = null;
+    simClock = Date.now();
+    sim = { route: ROUTES[+$('#simRoute').value], mult: +$('#simMult').value, seg: 0, off: 0 };
+    $('#bSim').textContent = 'Zatrzymaj symulację';
+    $('#dMap').open = true; mapOpen = true;
+    start();
+  };
+  $('#dMap').addEventListener('toggle', () => { mapOpen = $('#dMap').open; if (mapOpen && map) setTimeout(() => map.invalidateSize(), 50); });
+  if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+  renderJournal();
+}
+initUI();
+</script>
+</body>
+</html>
