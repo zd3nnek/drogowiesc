@@ -36,7 +36,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 #journal .e{border-top:1px solid var(--line);padding:8px 0;font-size:14px}
 #journal .e b{color:var(--acc)}
 #journal .e .m{color:var(--mute);font-size:12px}
-#journal .play{min-width:40px;min-height:36px;padding:0 10px;margin-right:4px;font-size:16px}
+#journal .play,#journal .stopj{min-width:40px;min-height:36px;padding:0 10px;margin-right:4px;font-size:16px}
 .vote.sel{background:var(--ok);color:#06210f}
 .vote.bad.sel{background:var(--bad);color:#fff}
 </style>
@@ -717,6 +717,7 @@ function setPaused(p) {
   if (p && !speaking) return;
   paused = p;
   $('#bPause').textContent = p ? '▶ Wznów' : '⏸ Pauza';
+  syncJournalButtons();
   if (p) speechSynthesis.cancel();
   else if (resumeSpeech) { const r = resumeSpeech; resumeSpeech = null; r(); }
 }
@@ -810,9 +811,29 @@ function syncVotes() {
   $('#bDown').classList.toggle('sel', !!current && current.vote === -1);
 }
 function renderJournal() {
-  $('#journal').innerHTML = journal.slice(0, 40).map((e, i) =>
-    `<div class="e">${e.skipped ? '' : `<button class="play" data-i="${i}" aria-label="Przeczytaj ponownie">▶</button> `}<b>${esc(e.title)}</b> ${e.vote === 1 ? '👍' : e.vote === -1 ? '👎' : ''}<br>${esc(e.text)}
+  $('#journal').innerHTML = journal.slice(0, 40).map(e =>
+    `<div class="e">${e.skipped ? '' : `<button class="play" data-t="${e.t}" aria-label="Odtwórz lub pauza">▶</button><button class="stopj" data-t="${e.t}" aria-label="Zatrzymaj">■</button> `}<b>${esc(e.title)}</b> ${e.vote === 1 ? '👍' : e.vote === -1 ? '👎' : ''}<br>${esc(e.text)}
      <div class="m">${new Date(e.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })} · ${e.mode} · ${e.kmh} km/h · ${e.dist} m · ${srcLabel(e.src)} · ciekawość ${e.score} · ${srcLink(e)}</div></div>`).join('');
+  syncJournalButtons();
+}
+// Odtwarzanie wpisu z dziennika: ▶ start → ⏸ pauza → ▶ wznów; ■ zatrzymuje (następne ▶ czyta od początku).
+let jPlay = null; // { t: znacznik wpisu, tok: obiekt tego odtworzenia }
+function syncJournalButtons() {
+  document.querySelectorAll('#journal .play').forEach(b => {
+    b.textContent = jPlay && jPlay.t === b.dataset.t && !paused ? '⏸' : '▶';
+  });
+}
+function journalPlay(t) {
+  if (jPlay && jPlay.t === t) { setPaused(!paused); return; }
+  const e = journal.find(x => x.t === t); if (!e) return;
+  const tok = {}; jPlay = { t, tok };
+  speak(`${e.intro} ${e.text}`).then(() => { if (jPlay && jPlay.tok === tok) jPlay = null; syncJournalButtons(); });
+  syncJournalButtons();
+}
+function journalStop(t) {
+  if (!jPlay || jPlay.t !== t) return;
+  jPlay = null; stopSpeech = true; speechSynthesis.cancel(); if (paused) setPaused(false);
+  syncJournalButtons();
 }
 
 // ---------- Pętla ----------
@@ -925,9 +946,8 @@ function initUI() {
   $('#bRepeat').onclick = () => { if (current) speak(`${current.intro} ${current.text}`); };
   // ▶ przy wpisie w dzienniku: przeczytaj ten komunikat jeszcze raz (przerywa bieżącą wypowiedź).
   $('#journal').addEventListener('click', ev => {
-    const b = ev.target.closest('.play'); if (!b) return;
-    const e = journal[+b.dataset.i]; if (!e) return;
-    speechSynthesis.cancel(); speak(`${e.intro} ${e.text}`);
+    const b = ev.target.closest('.play, .stopj'); if (!b) return;
+    if (b.classList.contains('play')) journalPlay(b.dataset.t); else journalStop(b.dataset.t);
   });
   const vote = v => { if (!current) return; current.vote = current.vote === v ? 0 : v; LS.set('journal', journal); renderJournal(); syncVotes(); };
   $('#bUp').onclick = () => vote(1); $('#bDown').onclick = () => vote(-1);
