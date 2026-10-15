@@ -36,6 +36,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 #journal .e{border-top:1px solid var(--line);padding:8px 0;font-size:14px}
 #journal .e b{color:var(--acc)}
 #journal .e .m{color:var(--mute);font-size:12px}
+#journal .play{min-width:40px;min-height:36px;padding:0 10px;margin-right:4px;font-size:16px}
 .vote.sel{background:var(--ok);color:#06210f}
 .vote.bad.sel{background:var(--bad);color:#fff}
 </style>
@@ -706,8 +707,11 @@ function duck(on) {
     if (on) { duckEl.currentTime = 0; duckEl.play().catch(() => {}); } else duckEl.pause();
   } catch (e) {}
 }
+// Numer wypowiedzi: nowa wypowiedź unieważnia poprzednią, żeby jej resztki nie wróciły po cancel().
+let speakGen = 0;
 function speak(text) {
   duck(true);
+  const gen = ++speakGen;
   return new Promise(res => {
     if (!('speechSynthesis' in window)) { duck(false); return res(); }
     speechSynthesis.cancel(); stopSpeech = false; speaking = true;
@@ -718,6 +722,7 @@ function speak(text) {
     if (buf) parts.push(buf);
     let i = 0;
     const next = () => {
+      if (gen !== speakGen) return res();
       if (i >= parts.length || stopSpeech) { speaking = false; duck(false); return res(); }
       const u = new SpeechSynthesisUtterance(parts[i++]);
       u.lang = S.lang === 'pl' ? 'pl-PL' : 'en-US';
@@ -776,10 +781,12 @@ function addJournal({ p, m, d, s, src, intro = '', text, err = '', skipped = fal
   return e;
 }
 
+// Skąd tekst: gotowa opowieść z narracje.json, AI na żywo albo fragment Wikipedii czytany na żywo.
+const srcLabel = s => s === 'ai' ? 'AI na żywo' : s === 'gotowe' ? 'gotowa opowieść' : 'Wikipedia na żywo';
+const srcLink = e => `<a href="https://${S.lang}.wikipedia.org/?curid=${e.id}" target="_blank" rel="noopener">źródło</a>`;
 function showNow(e) {
-  const url = `https://${S.lang}.wikipedia.org/?curid=${e.id}`;
   $('#now').innerHTML = `<span class="intro"></span> <span class="txt"></span>
-    <div class="meta">${e.src === 'ai' ? 'AI' : e.src === 'gotowe' ? 'gotowa opowieść' : 'Wikipedia'} · ${e.dist} m · ciekawość ${e.score}${e.err ? ' · AI: ' + esc(e.err) : ''} · <a href="${url}" target="_blank" rel="noopener">źródło</a></div>`;
+    <div class="meta">${srcLabel(e.src)} ·${e.dist} m · ciekawość ${e.score}${e.err ? ' · AI: ' + esc(e.err) : ''} · ${srcLink(e)}</div>`;
   $('#now .intro').textContent = e.intro;
   $('#now .txt').textContent = e.text;
   syncVotes();
@@ -790,9 +797,9 @@ function syncVotes() {
   $('#bDown').classList.toggle('sel', !!current && current.vote === -1);
 }
 function renderJournal() {
-  $('#journal').innerHTML = journal.slice(0, 40).map(e =>
-    `<div class="e"><b>${esc(e.title)}</b> ${e.vote === 1 ? '👍' : e.vote === -1 ? '👎' : ''}<br>${esc(e.text)}
-     <div class="m">${e.t.slice(11, 16)} · ${e.mode} · ${e.kmh} km/h · ${e.dist} m · ${e.src} · ciekawość ${e.score}</div></div>`).join('');
+  $('#journal').innerHTML = journal.slice(0, 40).map((e, i) =>
+    `<div class="e">${e.skipped ? '' : `<button class="play" data-i="${i}" aria-label="Przeczytaj ponownie">▶</button> `}<b>${esc(e.title)}</b> ${e.vote === 1 ? '👍' : e.vote === -1 ? '👎' : ''}<br>${esc(e.text)}
+     <div class="m">${new Date(e.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })} · ${e.mode} · ${e.kmh} km/h · ${e.dist} m · ${srcLabel(e.src)} · ciekawość ${e.score} · ${srcLink(e)}</div></div>`).join('');
 }
 
 // ---------- Pętla ----------
@@ -902,6 +909,12 @@ function initUI() {
   $('#bTestVoice').onclick = () => speak('Po prawej, około kilometra: Zamek Krzyżtopór. Tak brzmi Twój przewodnik.');
   $('#bSkip').onclick = () => { stopSpeech = true; speechSynthesis.cancel(); };
   $('#bRepeat').onclick = () => { if (current) speak(`${current.intro} ${current.text}`); };
+  // ▶ przy wpisie w dzienniku: przeczytaj ten komunikat jeszcze raz (przerywa bieżącą wypowiedź).
+  $('#journal').addEventListener('click', ev => {
+    const b = ev.target.closest('.play'); if (!b) return;
+    const e = journal[+b.dataset.i]; if (!e) return;
+    speechSynthesis.cancel(); speak(`${e.intro} ${e.text}`);
+  });
   const vote = v => { if (!current) return; current.vote = current.vote === v ? 0 : v; LS.set('journal', journal); renderJournal(); syncVotes(); };
   $('#bUp').onclick = () => vote(1); $('#bDown').onclick = () => vote(-1);
   $('#bCopy').onclick = async () => {
