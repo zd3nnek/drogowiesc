@@ -49,7 +49,8 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 <div class="card" id="now"><span class="hint">Tu pojawi się to, co mówi lektor.</span></div>
 
 <div class="row" style="margin-bottom:10px">
-  <button id="bRepeat">↺ Powtórz</button>
+  <button id="bPause">⏸ Pauza</button>
+  <button id="bRepeat">↺ Od początku</button>
   <button id="bSkip">⏭ Pomiń</button>
   <button id="bUp" class="vote">👍</button>
   <button id="bDown" class="vote bad">👎</button>
@@ -709,9 +710,20 @@ function duck(on) {
 }
 // Numer wypowiedzi: nowa wypowiedź unieważnia poprzednią, żeby jej resztki nie wróciły po cancel().
 let speakGen = 0;
+// Pauza: speechSynthesis.pause() na Androidzie działa zawodnie, więc pauza = cancel() i zapamiętanie kawałka,
+// a wznowienie czyta od początku przerwanego kawałka. Obietnica speak() czeka, więc w pauzie nie startuje nic nowego.
+let paused = false, resumeSpeech = null;
+function setPaused(p) {
+  if (p && !speaking) return;
+  paused = p;
+  $('#bPause').textContent = p ? '▶ Wznów' : '⏸ Pauza';
+  if (p) speechSynthesis.cancel();
+  else if (resumeSpeech) { const r = resumeSpeech; resumeSpeech = null; r(); }
+}
 function speak(text) {
   duck(true);
   const gen = ++speakGen;
+  if (paused) { paused = false; resumeSpeech = null; $('#bPause').textContent = '⏸ Pauza'; }
   return new Promise(res => {
     if (!('speechSynthesis' in window)) { duck(false); return res(); }
     speechSynthesis.cancel(); stopSpeech = false; speaking = true;
@@ -723,6 +735,7 @@ function speak(text) {
     let i = 0;
     const next = () => {
       if (gen !== speakGen) return res();
+      if (paused && !stopSpeech) { if (!resumeSpeech) { i = Math.max(0, i - 1); resumeSpeech = next; } return; }
       if (i >= parts.length || stopSpeech) { speaking = false; duck(false); return res(); }
       const u = new SpeechSynthesisUtterance(parts[i++]);
       u.lang = S.lang === 'pl' ? 'pl-PL' : 'en-US';
@@ -838,7 +851,7 @@ function stop() {
   running = false; $('#start').textContent = 'Start podróży'; $('#start').classList.remove('on');
   if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null;
   clearInterval(timer); timer = null; sim = null; $('#bSim').textContent = 'Start symulacji';
-  stopSpeech = true; speechSynthesis.cancel();
+  stopSpeech = true; speechSynthesis.cancel(); if (paused) setPaused(false);
   if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
   setStatus('Zatrzymano.');
 }
@@ -907,7 +920,8 @@ function initUI() {
 
   $('#start').onclick = () => running ? stop() : start();
   $('#bTestVoice').onclick = () => speak('Po prawej, około kilometra: Zamek Krzyżtopór. Tak brzmi Twój przewodnik.');
-  $('#bSkip').onclick = () => { stopSpeech = true; speechSynthesis.cancel(); };
+  $('#bSkip').onclick = () => { stopSpeech = true; speechSynthesis.cancel(); if (paused) setPaused(false); };
+  $('#bPause').onclick = () => setPaused(!paused);
   $('#bRepeat').onclick = () => { if (current) speak(`${current.intro} ${current.text}`); };
   // ▶ przy wpisie w dzienniku: przeczytaj ten komunikat jeszcze raz (przerywa bieżącą wypowiedź).
   $('#journal').addEventListener('click', ev => {
