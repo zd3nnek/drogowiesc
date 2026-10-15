@@ -6,67 +6,178 @@
 <title>Odkrywca — prototyp</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
-:root{--bg:#111418;--card:#1b2026;--line:#2a313a;--fg:#e9edf1;--mute:#93a0ad;--acc:#f5b041;--ok:#4cc38a;--bad:#e5645c}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;src:url(fonty/barlow-400-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;src:url(fonty/barlow-400-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:500;font-display:swap;src:url(fonty/barlow-500-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:500;font-display:swap;src:url(fonty/barlow-500-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;src:url(fonty/barlow-600-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;src:url(fonty/barlow-600-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:700;font-display:swap;src:url(fonty/barlow-700-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:700;font-display:swap;src:url(fonty/barlow-700-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:500;font-display:swap;src:url(fonty/barlow-semi-condensed-500-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:500;font-display:swap;src:url(fonty/barlow-semi-condensed-500-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:600;font-display:swap;src:url(fonty/barlow-semi-condensed-600-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:600;font-display:swap;src:url(fonty/barlow-semi-condensed-600-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonty/barlow-semi-condensed-700-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonty/barlow-semi-condensed-700-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+/* Kierunek „Drogowskaz”: bieżące miejsce jak brązowa tablica turystyczna; szarości asfaltu, jeden kolor przewodni.
+   Motyw: bez data-theme = jak w telefonie; data-theme="light"/"dark" = wybór ręczny (Ustawienia → Motyw). */
+:root{
+  --bg:#eceeec;--card:#ffffff;--line:#d6d9d5;--fg:#1d1f1c;--mute:#60645d;--btn:#e0e3df;--input:#f6f7f6;
+  --sign:#6b3f24;--on-sign:#ffffff;--prog:#6b3f24;--go:#6b3f24;--on-go:#ffffff;--stop:#b3261e;--ok:#2e7d4f;
+  --seg:#1d1f1c;--on-seg:#ffffff;
+  --head:"Barlow Semi Condensed","Arial Narrow",sans-serif;--body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:6px;color-scheme:light
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121311;--card:#1b1c1a;--line:#2c2e2a;--fg:#ebebe6;--mute:#9b9d96;--btn:#232522;--input:#151614;
+  --sign:#7a4a2c;--on-sign:#ffffff;--prog:#c08a5e;--go:#7a4a2c;--on-go:#ffffff;--stop:#c4372c;--ok:#3f9e68;
+  --seg:#ebebe6;--on-seg:#121311;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121311;--card:#1b1c1a;--line:#2c2e2a;--fg:#ebebe6;--mute:#9b9d96;--btn:#232522;--input:#151614;
+  --sign:#7a4a2c;--on-sign:#ffffff;--prog:#c08a5e;--go:#7a4a2c;--on-go:#ffffff;--stop:#c4372c;--ok:#3f9e68;
+  --seg:#ebebe6;--on-seg:#121311;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:12px 16px 40px;max-width:720px;margin-inline:auto}
-h1{font-size:20px;margin:4px 0 2px}
-h1 small{color:var(--mute);font-weight:400;font-size:13px}
-#status{color:var(--mute);font-size:13px;min-height:20px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
-#now{font-size:19px;min-height:84px}
-#now .intro{color:var(--acc);font-weight:600}
-#now .meta{color:var(--mute);font-size:12px;margin-top:8px}
-#now a{color:var(--mute)}
-button{font:inherit;color:var(--fg);background:#262d36;border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+body{margin:0 auto;max-width:720px;background:var(--bg);color:var(--fg);font:16px/1.5 var(--body);
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font:700 22px/1 var(--head);letter-spacing:.02em}
+.mode{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--mute)}
+.mode .ic{width:18px;height:18px}
+#status{color:var(--mute);font-size:13px;min-height:20px;font-variant-numeric:tabular-nums}
+.hint{color:var(--mute);font-size:13px}
+a{color:inherit;text-underline-offset:3px}
+
+/* Tablica i opowieść */
+#now{display:grid;gap:8px}
+.sign{background:var(--sign);color:var(--on-sign);border-radius:7px;padding:4px}
+.sign>div{border:2px solid var(--on-sign);border-radius:4px;padding:10px 12px;display:flex;align-items:center;gap:12px}
+.sign .ic{width:34px;height:34px;stroke-width:1.6}
+.sign b{display:block;font:700 23px/1.08 var(--head);letter-spacing:.01em}
+.sign small{display:block;font:500 15px/1.25 var(--head);opacity:.92;margin-top:2px}
+.story{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px}
+.story .txt{font-size:18px;line-height:1.5}
+.story .meta{font-size:12px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 10px}
+
+/* Przyciski */
+button{font:inherit;font-weight:600;color:var(--fg);background:var(--btn);border:0;border-radius:var(--r);padding:12px 14px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
 button:active{transform:scale(.98)}
-#start{width:100%;font-size:22px;font-weight:700;padding:20px;background:var(--acc);color:#1a1300;border:0}
-#start.on{background:var(--bad);color:#fff}
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--sign);outline-offset:2px}
+.ctr{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(4,minmax(0,1fr));gap:6px}
+.ctr button{padding:0;height:48px}
+#start{width:100%;height:62px;font:700 21px/1 var(--head);letter-spacing:.02em;background:var(--go);color:var(--on-go)}
+#start .ic{width:22px;height:22px}
+#start.on{background:var(--stop);color:#fff}
+.vote.sel{background:var(--ok);color:#fff}
+.vote.bad.sel{background:var(--stop);color:#fff}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>button{flex:1}
-details{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 0;padding:0 14px}
-summary{padding:14px 0;cursor:pointer;font-weight:600}
-details>div{padding-bottom:14px}
-label{display:block;margin:8px 0}
+
+/* Sekcje jako wiersze listy */
+.sections{border-top:1px solid var(--line)}
+details{border-bottom:1px solid var(--line)}
+summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 2px;cursor:pointer;font-weight:600}
+summary::-webkit-details-marker{display:none}
+summary .ic{color:var(--mute)}
+summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(-45deg);transition:transform .15s}
+details[open]>summary::after{transform:rotate(45deg)}
+details>div{padding:2px 2px 16px;display:grid;gap:10px}
+label{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chips label{margin:0;background:#232a33;border:1px solid var(--line);border-radius:20px;padding:6px 10px;font-size:14px}
-input[type=range]{width:100%}
-input[type=text],input[type=password],select{width:100%;font:inherit;background:#0d1014;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
-.hint{color:var(--mute);font-size:13px}
-#map{height:360px;border-radius:10px;margin-top:6px}
-#journal .e{border-top:1px solid var(--line);padding:8px 0;font-size:14px}
-#journal .e b{color:var(--acc)}
+.chips label{background:var(--btn);border-radius:var(--r);padding:7px 10px;font-size:14px}
+input[type=range]{width:100%;accent-color:var(--sign)}
+input[type=checkbox]{accent-color:var(--sign)}
+input[type=text],input[type=password],select{width:100%;font:inherit;background:var(--input);color:var(--fg);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.seg button{border-radius:0;background:transparent;color:var(--mute);font-size:14px;min-height:40px;border-left:1px solid var(--line)}
+.seg button:first-child{border-left:0}
+.seg button.sel{background:var(--seg);color:var(--on-seg)}
+#map{height:360px;border-radius:var(--r)}
+
+/* Dziennik */
+#journal .e{border-top:1px solid var(--line);padding:10px 0;font-size:14px;display:grid;gap:4px}
+#journal .e .h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#journal .e b{font-family:var(--head);font-size:16px}
 #journal .e .m{color:var(--mute);font-size:12px}
-#journal .play,#journal .stopj{min-width:40px;min-height:36px;padding:0 10px;margin-right:4px;font-size:16px}
-.vote.sel{background:var(--ok);color:#06210f}
-.vote.bad.sel{background:var(--bad);color:#fff}
-.about{display:grid;gap:8px;font-size:14px}
-.about h3{font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin:8px 0 0}
+#journal .play,#journal .stopj{min-width:40px;min-height:36px;padding:0 10px}
+#journal .play .ic,#journal .stopj .ic{width:18px;height:18px}
+#journal .v{display:inline-flex;color:var(--mute)}
+#journal .v .ic{width:16px;height:16px}
+
+/* O programie */
+.about{font-size:14px}
+.about h3{font:700 15px/1.2 var(--head);letter-spacing:.04em;text-transform:uppercase;margin:8px 0 0}
 .about p,.about ul{margin:0}
 .about ul{padding-left:18px;display:grid;gap:4px}
-.about a{color:var(--fg)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}button:active{transform:none}}
 </style>
+<script>
+// Motyw ustawiony ręcznie stosujemy przed narysowaniem strony, żeby nie mignął zły kolor.
+try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Ikony własne (linie 24×24, kolor = kolor tekstu). -->
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-restart" viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M19 5 9 12l10 7z"/></symbol>
+  <symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><rect x="3" y="11" width="4" height="9" rx="1"/><path d="M7 12l3.6-6.4c.6-1.1 2.5-.9 2.5.6L12.7 10h5.6c1.4 0 2.4 1.3 2 2.7l-1.7 5.8c-.3.9-1.1 1.5-2 1.5H7"/><path d="M14 14.5h5M14 17.5h4"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><g transform="matrix(1 0 0 -1 0 24)"><rect x="3" y="11" width="4" height="9" rx="1"/><path d="M7 12l3.6-6.4c.6-1.1 2.5-.9 2.5.6L12.7 10h5.6c1.4 0 2.4 1.3 2 2.7l-1.7 5.8c-.3.9-1.1 1.5-2 1.5H7"/><path d="M14 14.5h5M14 17.5h4"/></g></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M4 16v-3.5L6.2 7h11.6L20 12.5V16"/><path d="M3 16h18"/><path d="M4 12.5h16"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><path d="M3 11 21 3l-8 18-2-8z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M3 6h11M18 6h3M3 12h5M12 12h9M3 18h13M20 18h1"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></symbol>
+  <!-- Piktogramy na tablicy (według rodzaju miejsca). -->
+  <symbol id="p-historia" viewBox="0 0 24 24"><path d="M4 21V9h3V6h2v3h2V6h2v3h2V6h2v3h3v12z"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/></symbol>
+  <symbol id="p-sakralne" viewBox="0 0 24 24"><path d="M12 2v4M10 4h4"/><path d="M7 21V11l5-4 5 4v10z"/><path d="M10 21v-4h4v4"/></symbol>
+  <symbol id="p-architektura" viewBox="0 0 24 24"><path d="M3 21h18M5 21v-9M9.5 21v-9M14.5 21v-9M19 21v-9"/><path d="M2.5 10 12 4l9.5 6z"/></symbol>
+  <symbol id="p-natura" viewBox="0 0 24 24"><path d="M12 21v-5"/><path d="M12 3 6 11h3l-4 5h14l-4-5h3z"/></symbol>
+  <symbol id="p-gory" viewBox="0 0 24 24"><path d="M2 20 9 8l4 6 3-4 6 10z"/></symbol>
+  <symbol id="p-technika" viewBox="0 0 24 24"><path d="M3 21V11l5 3v-3l5 3v-3l5 3V4h3v17z"/><path d="M7 18h2M12 18h2"/></symbol>
+  <symbol id="p-kultura" viewBox="0 0 24 24"><path d="M3 21h18M5 21v-9M9.5 21v-9M14.5 21v-9M19 21v-9"/><path d="M2.5 10 12 4l9.5 6z"/><path d="M12 7.2v.01"/></symbol>
+  <symbol id="p-rodzina" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.8-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.8z"/></symbol>
+  <symbol id="p-miasta" viewBox="0 0 24 24"><path d="M3 21V9h6v12M9 21V4h7v17M16 21v-9h5v9"/><path d="M2 21h20"/></symbol>
+  <symbol id="p-wies" viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11z"/><path d="M10 21v-6h4v6"/></symbol>
+</svg>
 
-<h1>Odkrywca <small>prototyp · faza 0</small></h1>
+<header class="top">
+  <div class="brand">ODKRYWCA</div>
+  <div class="mode"><svg class="ic"><use href="#i-car"/></svg><span id="modeLbl">tryb automatyczny</span></div>
+</header>
 <div id="status">Gotowy. Naciśnij Start.</div>
 
-<div class="card" id="now"><span class="hint">Tu pojawi się to, co mówi lektor.</span></div>
+<div id="now"><div class="story"><span class="hint">Tu pojawi się tablica z nazwą miejsca i to, co mówi lektor.</span></div></div>
 
-<div class="row" style="margin-bottom:10px">
-  <button id="bPause">⏸ Pauza</button>
-  <button id="bRepeat">↺ Od początku</button>
-  <button id="bSkip">⏭ Pomiń</button>
-  <button id="bUp" class="vote">👍</button>
-  <button id="bDown" class="vote bad">👎</button>
+<div class="ctr">
+  <button id="bPause" aria-label="Pauza"><svg class="ic"><use href="#i-pause"/></svg><span>Pauza</span></button>
+  <button id="bRepeat" aria-label="Od początku"><svg class="ic"><use href="#i-restart"/></svg></button>
+  <button id="bSkip" aria-label="Pomiń"><svg class="ic"><use href="#i-skip"/></svg></button>
+  <button id="bUp" class="vote" aria-label="Ciekawe"><svg class="ic"><use href="#i-up"/></svg></button>
+  <button id="bDown" class="vote bad" aria-label="Nudne"><svg class="ic"><use href="#i-down"/></svg></button>
 </div>
 
-<button id="start">Start podróży</button>
+<button id="start"><svg class="ic"><use href="#i-go"/></svg><span>Start podróży</span></button>
 <p class="hint">Telefon zapyta o lokalizację dopiero po naciśnięciu Start. Ekran musi pozostać włączony (aplikacja prosi telefon o niewygaszanie). Muzyka z innej aplikacji może grać w tle.</p>
 
+<div class="sections">
 <details>
-  <summary>Ustawienia</summary>
+  <summary><svg class="ic"><use href="#i-settings"/></svg>Ustawienia</summary>
   <div>
+    <div class="lbl">Motyw</div>
+    <div class="seg" id="sTheme" role="radiogroup" aria-label="Motyw">
+      <button data-v="auto" role="radio">Automatyczny</button><button data-v="light" role="radio">Jasny</button><button data-v="dark" role="radio">Ciemny</button>
+    </div>
     <label>Tryb podróży
       <select id="sMode">
         <option value="auto">Automatycznie (z prędkości)</option>
@@ -94,7 +205,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
     </label>
     <label><input type="checkbox" id="sDuck"> Przyciszaj muzykę na czas lektora (eksperyment)</label>
     <button id="bTestVoice">Testuj głos</button>
-    <hr style="border-color:var(--line);margin:14px 0">
+    <hr>
     <label><input type="checkbox" id="sAi"> Opowieści z AI (Claude)</label>
     <label>Klucz API Anthropic
       <input type="password" id="sKey" placeholder="sk-ant-..." autocomplete="off">
@@ -111,7 +222,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 </details>
 
 <details id="dSim">
-  <summary>Symulacja trasy (test na komputerze)</summary>
+  <summary><svg class="ic"><use href="#i-route"/></svg>Symulacja trasy (test na komputerze)</summary>
   <div>
     <label>Trasa <select id="simRoute"></select></label>
     <label>Przyspieszenie czasu
@@ -123,13 +234,13 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 </details>
 
 <details id="dMap">
-  <summary>Mapa (podgląd)</summary>
+  <summary><svg class="ic"><use href="#i-map"/></svg>Mapa (podgląd)</summary>
   <div><div id="map"></div>
     <p class="hint">● pomarańczowe = kandydaci · zielone = opowiedziane · szare = odfiltrowane</p></div>
 </details>
 
 <details>
-  <summary>Dziennik</summary>
+  <summary><svg class="ic"><use href="#i-list"/></svg>Dziennik</summary>
   <div>
     <div class="row">
       <button id="bCopy">Kopiuj dziennik</button>
@@ -141,7 +252,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 </details>
 
 <details id="dAbout">
-  <summary>O programie</summary>
+  <summary><svg class="ic"><use href="#i-info"/></svg>O programie</summary>
   <div class="about">
     <p class="hint">Wersja 0.1 · wersja testowa<br>Autor: Daniel Jasion · Kontakt: odkrywca.aplikacja@gmail.com</p>
     <h3>Bezpieczeństwo</h3>
@@ -171,10 +282,12 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
       <li>Capacitor © Ionic, licencja MIT (wersja na Androida)</li>
       <li>Capacitor Text to Speech © Capacitor Community, licencja MIT (wersja na Androida)</li>
       <li>Anthropic SDK (tylko przy opowieściach z AI), licencja MIT</li>
-      <li>Ikony i grafiki: własne</li>
+      <li>Krój Barlow © 2017 The Barlow Project Authors (github.com/jpt/barlow), licencja SIL Open Font License 1.1; plik licencji: <a href="fonty/OFL-Barlow.txt" target="_blank" rel="noopener">OFL-Barlow.txt</a></li>
+      <li>Ikony, piktogramy i grafiki: własne</li>
     </ul>
   </div>
 </details>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
@@ -225,8 +338,22 @@ const ROUTES = [
 // ---------- Ustawienia ----------
 const S = Object.assign({
   mode: 'auto', interests: INTERESTS.filter(i => i.id !== 'miasta').map(i => i.id),
-  freq: '1', minScore: 3.5, voice: '', rate: 1.0, duck: false, ai: false, apiKey: '', model: 'claude-opus-5-5', lang: 'pl'
+  freq: '1', minScore: 3.5, voice: '', rate: 1.0, duck: false, ai: false, apiKey: '', model: 'claude-opus-5-5', lang: 'pl',
+  theme: 'auto'
 }, LS.get('settings', {}));
+// Motyw: 'auto' = jak w telefonie (prefers-color-scheme), 'light'/'dark' = wybór ręczny.
+function applyTheme() {
+  if (S.theme === 'light' || S.theme === 'dark') document.documentElement.dataset.theme = S.theme;
+  else delete document.documentElement.dataset.theme;
+  document.querySelectorAll('#sTheme button').forEach(b => { const on = b.dataset.v === S.theme; b.classList.toggle('sel', on); b.setAttribute('aria-checked', on); });
+}
+const icon = (id, cls = 'ic') => `<svg class="${cls}"><use href="#${id}"/></svg>`;
+const PICTO = ['historia', 'sakralne', 'technika', 'natura', 'gory', 'architektura', 'kultura', 'rodzina', 'miasta'];
+function picto(e) {
+  if (/^wieś /.test(e.intro || '') || /: wieś /.test(e.intro || '')) return 'p-wies';
+  const c = (e.cats || []).find(x => PICTO.includes(x));
+  return c ? 'p-' + c : 'p-architektura';
+}
 const saveS = () => LS.set('settings', S);
 
 // ---------- Geometria ----------
@@ -754,10 +881,15 @@ let speakGen = 0;
 // Pauza: speechSynthesis.pause() na Androidzie działa zawodnie, więc pauza = cancel() i zapamiętanie kawałka,
 // a wznowienie czyta od początku przerwanego kawałka. Obietnica speak() czeka, więc w pauzie nie startuje nic nowego.
 let paused = false, resumeSpeech = null;
+function setPauseBtn(p) {
+  const b = $('#bPause');
+  b.innerHTML = p ? icon('i-play') + '<span>Wznów</span>' : icon('i-pause') + '<span>Pauza</span>';
+  b.setAttribute('aria-label', p ? 'Wznów' : 'Pauza');
+}
 function setPaused(p) {
   if (p && !speaking) return;
   paused = p;
-  $('#bPause').textContent = p ? '▶ Wznów' : '⏸ Pauza';
+  setPauseBtn(p);
   syncJournalButtons();
   if (p) speechSynthesis.cancel();
   else if (resumeSpeech) { const r = resumeSpeech; resumeSpeech = null; r(); }
@@ -765,7 +897,7 @@ function setPaused(p) {
 function speak(text) {
   duck(true);
   const gen = ++speakGen;
-  if (paused) { paused = false; resumeSpeech = null; $('#bPause').textContent = '⏸ Pauza'; }
+  if (paused) { paused = false; resumeSpeech = null; setPauseBtn(false); }
   return new Promise(res => {
     if (!('speechSynthesis' in window)) { duck(false); return res(); }
     speechSynthesis.cancel(); stopSpeech = false; speaking = true;
@@ -816,8 +948,9 @@ async function announce(c) {
     if (!text) return;
     const d = dist(st.pos, p);
     const a = st.heading != null ? relAngle(bearing(st.pos, p), st.heading) : null;
-    const intro = `${dirPhrase(d, a, m)}: ${p.village ? 'wieś ' : ''}${cleanTitle(p.title)}.`;
-    current = addJournal({ p, m, d, s: c.s, src, intro, text, err });
+    const dirp = dirPhrase(d, a, m), place = `${p.village ? 'wieś ' : ''}${cleanTitle(p.title)}`;
+    const intro = `${dirp}: ${place}.`;
+    current = addJournal({ p, m, d, s: c.s, src, intro, text, err, dirp, place });
     showNow(current);
     await speak(`${intro} ${text}`);
   } catch (e) {
@@ -828,9 +961,10 @@ async function announce(c) {
   }
 }
 
-function addJournal({ p, m, d, s, src, intro = '', text, err = '', skipped = false }) {
+function addJournal({ p, m, d, s, src, intro = '', text, err = '', skipped = false, dirp = '', place = '' }) {
   const e = { t: new Date().toISOString(), id: p.id, title: p.title, desc: p.desc || '', mode: m, dist: Math.round(d),
-    kmh: Math.round(st.speed * 3.6), score: +s.toFixed(2), views30: p.views, cats: p.cats, src, intro, text, err, skipped, vote: 0 };
+    kmh: Math.round(st.speed * 3.6), score: +s.toFixed(2), views30: p.views, cats: p.cats, src, intro, text, err, skipped, vote: 0,
+    dirp, place };
   journal.unshift(e); if (journal.length > 200) journal.pop();
   LS.set('journal', journal); renderJournal();
   return e;
@@ -839,10 +973,14 @@ function addJournal({ p, m, d, s, src, intro = '', text, err = '', skipped = fal
 // Skąd tekst: gotowa opowieść z narracje.json, AI na żywo albo fragment Wikipedii czytany na żywo.
 const srcLabel = s => s === 'ai' ? 'AI na żywo' : s === 'gotowe' ? 'gotowa opowieść' : 'Wikipedia na żywo';
 const srcLink = e => `<a href="https://${S.lang}.wikipedia.org/?curid=${e.id}" target="_blank" rel="noopener">źródło</a>`;
+// Bieżące miejsce jak brązowa tablica turystyczna: piktogram, nazwa, kierunek i odległość; pod nią tekst lektora.
 function showNow(e) {
-  $('#now').innerHTML = `<span class="intro"></span> <span class="txt"></span>
-    <div class="meta">${srcLabel(e.src)} ·${e.dist} m · ciekawość ${e.score}${e.err ? ' · AI: ' + esc(e.err) : ''} · ${srcLink(e)}</div>`;
-  $('#now .intro').textContent = e.intro;
+  const name = e.place || cleanTitle(e.title), sub = e.dirp || '';
+  $('#now').innerHTML = `<div class="sign"><div>${icon(picto(e))}<div><b></b><small></small></div></div></div>
+    <div class="story"><div class="txt"></div>
+    <div class="meta"><span>${srcLabel(e.src)}</span><span>ciekawość ${e.score}</span>${e.err ? '<span>AI: ' + esc(e.err) + '</span>' : ''}<span>${srcLink(e)}</span></div></div>`;
+  $('#now .sign b').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  $('#now .sign small').textContent = sub;
   $('#now .txt').textContent = e.text;
   syncVotes();
 }
@@ -853,7 +991,7 @@ function syncVotes() {
 }
 function renderJournal() {
   $('#journal').innerHTML = journal.slice(0, 40).map(e =>
-    `<div class="e">${e.skipped ? '' : `<button class="play" data-t="${e.t}" aria-label="Odtwórz lub pauza">▶</button><button class="stopj" data-t="${e.t}" aria-label="Zatrzymaj">■</button> `}<b>${esc(e.title)}</b> ${e.vote === 1 ? '👍' : e.vote === -1 ? '👎' : ''}<br>${esc(e.text)}
+    `<div class="e"><div class="h">${e.skipped ? '' : `<button class="play" data-t="${e.t}" aria-label="Odtwórz lub pauza">${icon('i-play')}</button><button class="stopj" data-t="${e.t}" aria-label="Zatrzymaj">${icon('i-stop')}</button>`}<b>${esc(e.title)}</b>${e.vote === 1 ? `<span class="v" title="Ciekawe">${icon('i-up')}</span>` : e.vote === -1 ? `<span class="v" title="Nudne">${icon('i-down')}</span>` : ''}</div><div>${esc(e.text)}</div>
      <div class="m">${new Date(e.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })} · ${e.mode} · ${e.kmh} km/h · ${e.dist} m · ${srcLabel(e.src)} · ciekawość ${e.score} · ${srcLink(e)}</div></div>`).join('');
   syncJournalButtons();
 }
@@ -861,7 +999,7 @@ function renderJournal() {
 let jPlay = null; // { t: znacznik wpisu, tok: obiekt tego odtworzenia }
 function syncJournalButtons() {
   document.querySelectorAll('#journal .play').forEach(b => {
-    b.textContent = jPlay && jPlay.t === b.dataset.t && !paused ? '⏸' : '▶';
+    b.innerHTML = icon(jPlay && jPlay.t === b.dataset.t && !paused ? 'i-pause' : 'i-play');
   });
 }
 function journalPlay(t) {
@@ -889,6 +1027,7 @@ function tick() {
   if (aiOn()) candidates(m, H * 2).slice(0, 2).forEach(c => { if (!readyNarration(c.p, m)) aiNarration(c.p, m).catch(() => {}); });
   const waitS = Math.max(0, Math.ceil((lastSpokeAt + gap - clock()) / 1000));
   if (!busy && waitS === 0) { const c = candidates(m, H)[0]; if (c) announce(c); }
+  $('#modeLbl').textContent = MODES[m].label.charAt(0).toUpperCase() + MODES[m].label.slice(1) + (S.mode === 'auto' ? ' (auto)' : '');
   setStatus(`${sim ? 'SYMULACJA · ' : ''}GPS ±${Math.round(st.acc || 0)} m · ${Math.round(st.speed * 3.6)} km/h · kurs ${st.heading == null ? '—' : Math.round(st.heading) + '°'} · ${MODES[m].label} · miejsc: ${POIS.size}` +
     (busy ? ' · mówi' : waitS ? ` · przerwa ${waitS} s` : ' · szuka'));
   if (mapOpen) updateMap(H);
@@ -896,7 +1035,7 @@ function tick() {
 function setStatus(t) { $('#status').textContent = t; }
 
 async function start() {
-  running = true; $('#start').textContent = 'Stop'; $('#start').classList.add('on');
+  running = true; $('#start').innerHTML = icon('i-stop') + '<span>Zakończ</span>'; $('#start').classList.add('on');
   speak('Odkrywca włączony.');
   try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   if (!sim) {
@@ -910,7 +1049,7 @@ async function start() {
   timer = setInterval(tick, 1000);
 }
 function stop() {
-  running = false; $('#start').textContent = 'Start podróży'; $('#start').classList.remove('on');
+  running = false; $('#start').innerHTML = icon('i-go') + '<span>Start podróży</span>'; $('#start').classList.remove('on');
   if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null;
   clearInterval(timer); timer = null; sim = null; $('#bSim').textContent = 'Start symulacji';
   stopSpeech = true; speechSynthesis.cancel(); if (paused) setPaused(false);
@@ -968,6 +1107,8 @@ function updateMap(H) {
 
 // ---------- UI ----------
 function initUI() {
+  applyTheme();
+  $('#sTheme').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; S.theme = b.dataset.v; saveS(); applyTheme(); });
   $('#sInterests').innerHTML = INTERESTS.map(i => `<label><input type="checkbox" value="${i.id}" ${S.interests.includes(i.id) ? 'checked' : ''}> ${i.label}</label>`).join('');
   $('#sInterests').addEventListener('change', () => { S.interests = [...document.querySelectorAll('#sInterests input:checked')].map(x => x.value); saveS(); });
   const bind = (sel, key, cast = v => v, after) => { const el = $(sel); el.value = S[key]; el.addEventListener('input', () => { S[key] = cast(el.value); saveS(); after && after(); }); };
@@ -995,7 +1136,7 @@ function initUI() {
   $('#bCopy').onclick = async () => {
     // Zwięźle, jeden wpis na linię: długi JSON ucinał się przy wklejaniu.
     const txt = journal.map(e => [new Date(e.t).toLocaleString('pl-PL').slice(0, 17), e.id, e.title, e.src, e.mode,
-      e.kmh + 'km/h', e.dist + 'm', e.score, e.vote > 0 ? '👍' : e.vote < 0 ? '👎' : '', e.skipped ? 'pominięte' : '',
+      e.kmh + 'km/h', e.dist + 'm', e.score, e.vote > 0 ? 'ciekawe' : e.vote < 0 ? 'nudne' : '', e.skipped ? 'pominięte' : '',
       e.err || '', e.src === 'gotowe' ? '' : (e.text || '').slice(0, 120)].join(' | ')).join('\n');
     try { await navigator.clipboard.writeText(txt); setStatus('Dziennik skopiowany (' + journal.length + ' wpisów).'); }
     catch (e) { setStatus('Nie udało się skopiować do schowka.'); }
