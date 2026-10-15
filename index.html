@@ -155,6 +155,8 @@ const INTERESTS = [
   { id: 'miasta', label: 'Miasta (wjazd)', re: /\bmiasto\b/i }
 ];
 // Opisy, które z góry odrzucamy. Wsie nie: są oceniane osobno (patrz inspectVillage).
+// Miejsca, które warto zapowiedzieć zawsze, niezależnie od liczby odsłon (zamek w Ćmielowie: 3,45 przy progu 3,5).
+const MUST_SEE = /zam(ek|ku)\b|pałac|twierdz|warown|opactw|grodzisk/i;
 const VILLAGE = /^(wieś|część wsi|przysiółek|osada|kolonia)(?=[\s,]|$)/i; // \b nie działa po „ś”
 const EXCLUDE = /^(gmina|powiat|sołectwo|ulica|aleja|plac|przystanek|stacja|szkoła|parafia|dekanat|obręb|okręg|klub|stowarzyszenie|przedsiębiorstwo|spółka|stadion|osiedle|dzielnica|część miasta|szpital|jednostka|droga|linia kolejowa|rzeka|potok|struga|kanał|centrum handlowe|galeria handlowa|sklep|hotel|uczelnia|uniwersytet|szkoła wyższa|politechnika|akademia|biurowiec|budynek biurowy|hala|lotnisko|lądowisko|sąd|urząd|komisariat|więzienie|zakład karny|elektrociepłownia|oczyszczalnia|wysypisko|nadajnik|maszt|stacja paliw|zajezdnia|węzeł drogowy|obwodnica)/i;
 // Rzeki/potoki wycinamy, bo przecina się je co chwilę; wrócą, gdy będzie lepszy ranking.
@@ -170,6 +172,9 @@ const ROUTES = [
     pts: [[50.8703,20.6275],[50.8530,20.7600],[50.8150,20.9200],[50.7766,21.0832],[50.7860,21.2400],[50.8000,21.4250],[50.7500,21.3600],[50.7180,21.3180],[50.6900,21.2850]] },
   { name: 'Kunów → Śnieżkowice → Waśniów → Nowa Słupia → Bieliny → Kielce (auto, 70 km/h)', kmh: 70,
     pts: [[50.9547,21.2794],[50.9100,21.2458],[50.8992,21.2231],[50.8639,21.0900],[50.8581,21.0219],[50.8492,20.9222],[50.8669,20.8903],[50.9036,20.7278],[50.8717,20.6314]] },
+  // Punkty z prawdziwej drogi (OSRM, co ~1 km), nie odcinki proste.
+  { name: 'Ostrowiec Św. → Ćmielów → Ożarów → Kozłówek k. Tarłowa (auto, 70 km/h)', kmh: 70,
+    pts: [[50.9399,21.3869],[50.9308,21.3884],[50.925,21.4031],[50.9214,21.4161],[50.9152,21.4279],[50.9108,21.4414],[50.9065,21.4545],[50.9024,21.4672],[50.8978,21.4816],[50.894,21.4945],[50.8854,21.4999],[50.8813,21.5138],[50.8799,21.5282],[50.8773,21.5447],[50.8794,21.5588],[50.8761,21.572],[50.877,21.5861],[50.8799,21.611],[50.8816,21.6249],[50.8834,21.6399],[50.8854,21.6565],[50.8919,21.6678],[50.902,21.6719],[50.912,21.677],[50.9233,21.6818],[50.9333,21.686],[50.9421,21.6902],[50.9509,21.6959],[50.9597,21.7012],[50.9687,21.7051],[50.9748,21.6941],[50.9753,21.6932]] },
   { name: 'Sandomierz, starówka (spacer, 4,5 km/h)', kmh: 4.5,
     pts: [[50.6797,21.7489],[50.6818,21.7506],[50.6800,21.7470],[50.6775,21.7462],[50.6790,21.7440]] }
 ];
@@ -376,8 +381,10 @@ function interest(p) {
     const s = 2.6 + Math.min(p.gem, 6) * 0.25 + (Math.log10((p.views || 0) + 10) - 1) * 0.3;
     return p.cats.some(c => S.interests.includes(c)) ? s : -1;
   }
-  if (!p.cats.length) return p.base * 0.75;
-  return p.cats.some(c => S.interests.includes(c)) ? p.base : -1;
+  // Zamki, pałace, twierdze i miejsca z gotową opowieścią mówią zawsze, nawet przy małej sławie w Wikipedii.
+  const must = MUST_SEE.test(p.title + ' ' + (p.desc || '')) || hasReady(p);
+  const s = !p.cats.length ? p.base * 0.75 : p.cats.some(c => S.interests.includes(c)) ? p.base : -1;
+  return must && (s >= 0 || !p.cats.length) ? Math.max(s, S.minScore) : s;
 }
 function horizon(m) {
   const v = st.speed;
@@ -478,7 +485,7 @@ function prevWord(str, off) {
 }
 const LOC_PREP = new Set(['w', 'we', 'o', 'przy', 'po']), INS_PREP = new Set(['przed', 'między', 'pomiędzy', 'nad', 'pod']);
 const caseAfter = (str, off) => { const p = prevWord(str, off); return LOC_PREP.has(p) ? 'loc' : INS_PREP.has(p) ? 'ins' : 'gen'; };
-function plural(x, forms) { // forms: [1, 2–4, 5+, ułamek]
+function unitForm(x, forms) { // forms: [1, 2–4, 5+, ułamek]
   if (/[.,]/.test(x)) return forms[3];
   const n = +x;
   if (n === 1) return forms[0];
@@ -558,7 +565,7 @@ function forSpeech(t) {
     mln: ['milion', 'miliony', 'milionów', 'miliona'], mld: ['miliard', 'miliardy', 'miliardów', 'miliarda'] };
   const GEN_PREP = new Set(['około', 'ok.', 'od', 'do', 'z', 'ze', 'ponad', 'blisko', 'koło', 'kilku', 'kilkunastu']);
   t = t.replace(new RegExp(`${NB}(\\d+(?:[.,]\\d+)?)\\s*(km|m|ha|tys\\.|mln|mld)(?![\\p{L}\\d])`, 'gu'), (m, n, u, off, s) => {
-    const f = UNITS[u], word = GEN_PREP.has(prevWord(s, off)) && !/[.,]/.test(n) ? (+n === 1 ? f[3] : f[2]) : plural(n, f);
+    const f = UNITS[u], word = GEN_PREP.has(prevWord(s, off)) && !/[.,]/.test(n) ? (+n === 1 ? f[3] : f[2]) : unitForm(n, f);
     return n + ' ' + word + (u === 'tys.' && /^\s+\p{Lu}/u.test(s.slice(off + m.length)) ? '.' : '');
   });
   t = t.replace(/(\d)\s*%/g, '$1 procent');
@@ -612,6 +619,7 @@ Zasady:
 - Jeśli źródło podaje coś jako legendę, podanie lub tradycję, powiedz to wprost, np. „według legendy”.
 - Wybierz jedną, najciekawszą rzecz, coś zaskakującego albo dającego się wyobrazić. Nie wyliczaj faktów ani dat po kolei.
 - Pisz językiem mówionym: krótkie zdania, bez nawiasów, skrótów, list i cudzysłowów. Daty i liczby tylko wtedy, gdy są naprawdę ciekawe.
+- Wieki, lata, daty i liczebniki porządkowe zapisuj słownie, w poprawnej odmianie, nigdy cyframi rzymskimi ani arabskimi: „w piętnastym wieku”, „w tysiąc sześćset pięćdziesiątym piątym roku”, „piątego maja”, „Zygmunt Trzeci”. Skróty rozwijaj: „świętego”, „około”, „kilometrów”.
 - Nie zaczynaj od nazwy miejsca ani od „To jest”, bo nazwa padła już w zapowiedzi.
 - Bez powitań, pytań do słuchacza i ogólników typu „warto odwiedzić”.
 - Jeśli źródło na to pozwala, dopasuj kąt opowieści do zainteresowań słuchacza.
@@ -663,9 +671,10 @@ function aiNarration(p, m) {
 // Mają pierwszeństwo przed AI na żywo i przed Wikipedią. Tekst "POMIŃ" = nie mówić o tym miejscu.
 let READY = {};
 fetch('narracje.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { READY = j || {}; }).catch(() => {});
+const hasReady = p => { const r = READY[p.id]; return !!(r && r.car && r.car.replace(/[.\s]/g, '').toUpperCase() !== 'POMIŃ'); };
 function readyNarration(p, m) {
   const r = READY[p.id];
-  return r ? (m === 'walk' ? r.walk || r.car : r.car) || null : null;
+  return r ?(m === 'walk' ? r.walk || r.car : r.car) || null : null;
 }
 const withTimeout = (pr, ms) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('za długo')), ms))]);
 const aiOn = () => S.ai && S.apiKey;
