@@ -372,7 +372,8 @@ function maybeFetch() {
 }
 
 // ---------- Ranking ----------
-const heardRecently = id => heard[id] && Date.now() - heard[id] < 30 * 864e5;
+// Powtórka miejsca dopiero po 3 godzinach (powrót tą samą drogą ma znów opowiadać).
+const heardRecently = id => heard[id] && Date.now() - heard[id] < 3 * 36e5;
 function interest(p) {
   if (p.excluded || p.lat == null || heardRecently(p.id)) return -1;
   if (p.village) {
@@ -904,7 +905,10 @@ function initUI() {
   const vote = v => { if (!current) return; current.vote = current.vote === v ? 0 : v; LS.set('journal', journal); renderJournal(); syncVotes(); };
   $('#bUp').onclick = () => vote(1); $('#bDown').onclick = () => vote(-1);
   $('#bCopy').onclick = async () => {
-    const txt = JSON.stringify(journal, null, 1);
+    // Zwięźle, jeden wpis na linię: długi JSON ucinał się przy wklejaniu.
+    const txt = journal.map(e => [new Date(e.t).toLocaleString('pl-PL').slice(0, 17), e.id, e.title, e.src, e.mode,
+      e.kmh + 'km/h', e.dist + 'm', e.score, e.vote > 0 ? '👍' : e.vote < 0 ? '👎' : '', e.skipped ? 'pominięte' : '',
+      e.err || '', e.src === 'gotowe' ? '' : (e.text || '').slice(0, 120)].join(' | ')).join('\n');
     try { await navigator.clipboard.writeText(txt); setStatus('Dziennik skopiowany (' + journal.length + ' wpisów).'); }
     catch (e) { setStatus('Nie udało się skopiować do schowka.'); }
   };
