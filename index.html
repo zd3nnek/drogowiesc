@@ -39,6 +39,11 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
 #journal .play,#journal .stopj{min-width:40px;min-height:36px;padding:0 10px;margin-right:4px;font-size:16px}
 .vote.sel{background:var(--ok);color:#06210f}
 .vote.bad.sel{background:var(--bad);color:#fff}
+.about{display:grid;gap:8px;font-size:14px}
+.about h3{font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin:8px 0 0}
+.about p,.about ul{margin:0}
+.about ul{padding-left:18px;display:grid;gap:4px}
+.about a{color:var(--fg)}
 </style>
 </head>
 <body>
@@ -132,6 +137,42 @@ input[type=text],input[type=password],select{width:100%;font:inherit;background:
       <button id="bResetHeard">Zapomnij usłyszane</button>
     </div>
     <div id="journal"></div>
+  </div>
+</details>
+
+<details id="dAbout">
+  <summary>O programie</summary>
+  <div class="about">
+    <p class="hint">Wersja 0.1 · wersja testowa<br>Autor: Daniel Jasion · Kontakt: odkrywca.aplikacja@gmail.com</p>
+    <h3>Bezpieczeństwo</h3>
+    <p>Nie obsługuj aplikacji podczas prowadzenia. Ustaw ją przed jazdą, a w trakcie korzystaj tylko z głosu. Odkrywca nie jest nawigacją i nie zastępuje znaków drogowych ani przepisów. Wymienione miejsca mogą być prywatne, zamknięte lub niebezpieczne. Wzmianka w aplikacji nie oznacza, że wolno tam wejść.</p>
+    <h3>Skąd są opowieści</h3>
+    <p>Gotowe opowieści opracowano na podstawie artykułów <b>polskiej Wikipedii</b>. Teksty skrócono, przeredagowano i dostosowano do czytania na głos. Autorami artykułów źródłowych są wolontariusze Wikipedii, a ich listę zawiera historia zmian każdego artykułu. Link „źródło” przy każdej opowieści prowadzi do artykułu.</p>
+    <p>Artykuły i opowieści z nich opracowane są dostępne na licencji <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.pl" target="_blank" rel="noopener">Creative Commons Uznanie autorstwa – Na tych samych warunkach 4.0 (CC BY-SA 4.0)</a>. Gdy nie ma gotowej opowieści, aplikacja czyta na żywo początek artykułu z Wikipedii, na tej samej licencji.</p>
+    <p>Opowieści przygotowano z pomocą sztucznej inteligencji i sprawdzono z artykułami źródłowymi, ale mogą zawierać błędy lub nieaktualne informacje. Zgłoś błąd: odkrywca.aplikacja@gmail.com.</p>
+    <p class="hint">Wikipedia jest znakiem towarowym Wikimedia Foundation. Odkrywca nie jest powiązany z Wikimedia Foundation ani przez nią wspierany.</p>
+    <h3>Mapa</h3>
+    <p>Dane mapy © współtwórcy <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, licencja ODbL. Wyświetlanie mapy: biblioteka Leaflet.</p>
+    <h3>Opowieści z AI (opcjonalne)</h3>
+    <p>Po włączeniu tej opcji i podaniu własnego klucza tekst powstaje na bieżąco w modelu Claude firmy Anthropic, na podstawie faktów z Wikipedii. Taki tekst jest oznaczony w dzienniku jako „AI na żywo”. Za korzystanie z klucza płaci jego właściciel według zasad Anthropic.</p>
+    <h3>Prywatność</h3>
+    <ul>
+      <li>Nie zakładasz konta. Nie zbieramy danych, nie ma reklam ani statystyk.</li>
+      <li>Lokalizacja jest używana tylko w telefonie, do wyboru miejsc w pobliżu. Nie wysyłamy jej na nasze serwery.</li>
+      <li>Gdy w okolicy brakuje gotowej opowieści, aplikacja wysyła przybliżone współrzędne do Wikipedii (Wikimedia Foundation), żeby znaleźć artykuły w pobliżu.</li>
+      <li>Mapa pobiera kafelki z serwerów OpenStreetMap, które widzą oglądany obszar.</li>
+      <li>Przy włączonych opowieściach z AI do Anthropic trafiają nazwa i opis miejsca oraz Twój klucz API.</li>
+      <li>Ustawienia, dziennik i klucz API są zapisane tylko w tym telefonie. Usuwa je przycisk „Wyczyść” albo odinstalowanie aplikacji.</li>
+    </ul>
+    <p>Aplikacja nie przekazuje autorowi żadnych danych. Jeśli napiszesz e-mail, użyjemy go tylko do odpowiedzi. W sprawach prywatności: Daniel Jasion, odkrywca.aplikacja@gmail.com. <a href="https://zd3nnek.github.io/odkrywca/prywatnosc.html" target="_blank" rel="noopener">Pełna polityka prywatności</a></p>
+    <h3>Licencje oprogramowania</h3>
+    <ul class="hint">
+      <li>Leaflet © Vladimir Agafonkin, CloudMade i współtwórcy, licencja BSD-2-Clause</li>
+      <li>Capacitor © Ionic, licencja MIT (wersja na Androida)</li>
+      <li>Capacitor Text to Speech © Capacitor Community, licencja MIT (wersja na Androida)</li>
+      <li>Anthropic SDK (tylko przy opowieściach z AI), licencja MIT</li>
+      <li>Ikony i grafiki: własne</li>
+    </ul>
   </div>
 </details>
 

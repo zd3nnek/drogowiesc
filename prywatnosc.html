@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Odkrywca — polityka prywatności</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eceeec;--card:#ffffff;--line:#d6d9d5;--fg:#1d1f1c;--mute:#60645d;--sign:#6b3f24;--on-sign:#ffffff;
+  --head:"Barlow Semi Condensed","Arial Narrow",sans-serif;--body:"Barlow",system-ui,sans-serif;color-scheme:light}
+@media (prefers-color-scheme: dark){:root{--bg:#121311;--card:#1b1c1a;--line:#2c2e2a;--fg:#ebebe6;--mute:#9b9d96;--sign:#7a4a2c;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);padding:24px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+main{max-width:720px;margin:0 auto;display:grid;gap:18px}
+.sign{background:var(--sign);color:var(--on-sign);border-radius:7px;padding:4px;justify-self:start}
+.sign div{border:2px solid var(--on-sign);border-radius:4px;padding:8px 14px;font:700 24px/1.1 var(--head);letter-spacing:.02em}
+h1{font:700 28px/1.15 var(--head);margin:0;text-wrap:balance}
+h2{font:700 18px/1.2 var(--head);letter-spacing:.03em;text-transform:uppercase;margin:10px 0 0}
+p,ul{margin:0}
+ul{padding-left:20px;display:grid;gap:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:grid;gap:8px}
+.mute{color:var(--mute);font-size:14px}
+a{color:inherit;text-underline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+  <div class="sign"><div>ODKRYWCA</div></div>
+  <h1>Polityka prywatności aplikacji Odkrywca</h1>
+  <p class="mute">Wersja robocza z 15 października 2026 r. Dotyczy aplikacji Odkrywca na Androida oraz wersji w przeglądarce.</p>
+
+  <div class="card">
+    <p><b>W skrócie:</b> nie zakładasz konta, a aplikacja nie wysyła autorowi żadnych danych. Nie ma reklam ani statystyk. Twoja lokalizacja służy tylko do wyboru miejsc w pobliżu i jest przetwarzana w telefonie. Niektóre funkcje łączą się z zewnętrznymi serwisami. Opisujemy je niżej.</p>
+  </div>
+
+  <h2>Kto odpowiada za dane</h2>
+  <p>Autorem aplikacji jest Daniel Jasion. Kontakt we wszystkich sprawach dotyczących prywatności: <a href="mailto:odkrywca.aplikacja@gmail.com">odkrywca.aplikacja@gmail.com</a>.</p>
+  <p>Autor nie otrzymuje żadnych danych z aplikacji. Jest administratorem danych osobowych tylko wtedy, gdy ktoś sam do niego napisze (patrz „Korespondencja”).</p>
+
+  <h2>Lokalizacja</h2>
+  <ul>
+    <li>Aplikacja prosi o dostęp do lokalizacji dopiero po naciśnięciu „Start podróży” i korzysta z niej tylko w czasie podróży, gdy aplikacja jest otwarta.</li>
+    <li>Na podstawie lokalizacji, prędkości i kierunku jazdy telefon sam wybiera, o którym miejscu opowiedzieć. Większość opowieści jest zapisana w aplikacji i nie wymaga internetu.</li>
+    <li>Lokalizacja nie jest zapisywana ani wysyłana do autora.</li>
+  </ul>
+
+  <h2>Zewnętrzne serwisy</h2>
+  <p>Niektóre funkcje łączą się bezpośrednio z telefonu z serwisami innych firm. Każdy z nich odpowiada za dane, które do niego trafiają, według własnej polityki prywatności. Jak przy każdym połączeniu z internetem, serwis widzi adres IP telefonu.</p>
+  <ul>
+    <li><b>Wikipedia</b> (Wikimedia Foundation). Gdy w okolicy brakuje gotowej opowieści, aplikacja wysyła przybliżone współrzędne, żeby znaleźć artykuły o pobliskich miejscach, i pobiera ich treść. <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy">Polityka prywatności Wikimedia</a>.</li>
+    <li><b>OpenStreetMap</b> (OpenStreetMap Foundation). Po otwarciu mapy pobierane są kafelki mapy dla oglądanego obszaru. <a href="https://osmfoundation.org/wiki/Privacy_Policy">Polityka prywatności OSMF</a>.</li>
+    <li><b>Anthropic</b>, tylko jeśli włączysz „Opowieści z AI” i podasz własny klucz API. Do Anthropic trafiają wtedy nazwa i opis miejsca, polecenie przygotowania opowieści oraz Twój klucz. <a href="https://www.anthropic.com/legal/privacy">Polityka prywatności Anthropic</a>.</li>
+    <li><b>Serwery z bibliotekami</b> (cdnjs prowadzony przez Cloudflare, jsDelivr). Wersja w przeglądarce pobiera z nich bibliotekę mapy i, przy opowieściach z AI, bibliotekę Anthropic.</li>
+  </ul>
+
+  <h2>Dane zapisane w telefonie</h2>
+  <p>Ustawienia, dziennik usłyszanych opowieści, lista już opowiedzianych miejsc i ewentualny klucz API są zapisane tylko w pamięci telefonu lub przeglądarki. Nikt poza Tobą nie ma do nich dostępu. Usuniesz je przyciskami „Wyczyść” i „Zapomnij usłyszane” w aplikacji, wyczyszczeniem danych aplikacji albo jej odinstalowaniem.</p>
+
+  <h2>Korespondencja</h2>
+  <p>Jeśli napiszesz na adres <a href="mailto:odkrywca.aplikacja@gmail.com">odkrywca.aplikacja@gmail.com</a>, na przykład ze zgłoszeniem błędu, administratorem Twojego adresu e-mail i treści wiadomości jest Daniel Jasion. Dane te są używane wyłącznie do odpowiedzi i obsługi zgłoszenia. Podstawą jest prawnie uzasadniony interes w odpowiedzi na wiadomość (art. 6 ust. 1 lit. f RODO). Wiadomości przechowujemy przez czas potrzebny do załatwienia sprawy, nie dłużej niż 12 miesięcy od ostatniej wiadomości. Poczta działa w usłudze Gmail firmy Google, która może przetwarzać dane także poza Europejskim Obszarem Gospodarczym na zasadach opisanych w <a href="https://policies.google.com/privacy?hl=pl">polityce prywatności Google</a>.</p>
+  <p>Masz prawo dostępu do swoich danych, ich sprostowania, usunięcia lub ograniczenia przetwarzania, prawo sprzeciwu oraz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, <a href="https://uodo.gov.pl">uodo.gov.pl</a>).</p>
+
+  <h2>Dzieci</h2>
+  <p>Aplikacja nie jest skierowana do dzieci i nie zbiera świadomie danych dzieci.</p>
+
+  <h2>Zmiany</h2>
+  <p>O zmianach tej polityki poinformujemy na tej stronie, z nową datą u góry.</p>
+</main>
+</body>
+</html>
