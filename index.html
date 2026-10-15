@@ -440,6 +440,141 @@ function splitSentences(t) {
   return out;
 }
 
+// ---- Tekst do czytania na głos (PL): wieki, lata, daty, skróty i jednostki słownie ----
+// Tylko dla lektora; na ekranie zostaje oryginał. Odmiana z heurystyk (przyimek przed liczbą, końcówka słowa po).
+const ORD1 = ['', 'pierwsz', 'drug', 'trzec', 'czwart', 'piąt', 'szóst', 'siódm', 'ósm', 'dziewiąt'];
+const ORDT = ['dziesiąt', 'jedenast', 'dwunast', 'trzynast', 'czternast', 'piętnast', 'szesnast', 'siedemnast', 'osiemnast', 'dziewiętnast'];
+const ORD10 = ['', '', 'dwudziest', 'trzydziest', 'czterdziest', 'pięćdziesiąt', 'sześćdziesiąt', 'siedemdziesiąt', 'osiemdziesiąt', 'dziewięćdziesiąt'];
+const ORD100 = ['', 'setn', 'dwusetn', 'trzechsetn', 'czterechsetn', 'pięćsetn', 'sześćsetn', 'siedemsetn', 'osiemsetn', 'dziewięćsetn'];
+const CARD100 = ['', 'sto', 'dwieście', 'trzysta', 'czterysta', 'pięćset', 'sześćset', 'siedemset', 'osiemset', 'dziewięćset'];
+// Przypadki: nom, gen, loc (= też narzędnik), dat; żeńskie: fnom, fgen (= też miejscownik, celownik), fins (= też biernik).
+const ENDS = {
+  hard: { nom: 'y', gen: 'ego', loc: 'ym', dat: 'emu', fnom: 'a', fgen: 'ej', fins: 'ą' },
+  drug: { nom: 'i', gen: 'iego', loc: 'im', dat: 'iemu', fnom: 'a', fgen: 'iej', fins: 'ą' },
+  trzec: { nom: 'i', gen: 'iego', loc: 'im', dat: 'iemu', fnom: 'ia', fgen: 'iej', fins: 'ią' },
+};
+const ordEnd = (stem, c) => stem + (ENDS[stem] || ENDS.hard)[c];
+function ordStems(n) { // tylko 1–99, do złożeń typu „piętnastowieczny”
+  const t = Math.floor(n / 10), u = n % 10;
+  if (t === 1) return [ORDT[u]];
+  return [t ? ORD10[t] : '', u ? ORD1[u] : ''].filter(Boolean);
+}
+function ordWords(n, c) {
+  const th = Math.floor(n / 1000), h = Math.floor(n % 1000 / 100), rest = n % 100;
+  if (n % 1000 === 0) return ordEnd(th === 1 ? 'tysięczn' : 'dwutysięczn', c);
+  const pre = th === 1 ? 'tysiąc ' : th === 2 ? 'dwa tysiące ' : '';
+  if (!rest) return pre + ordEnd(ORD100[h], c);
+  return pre + (h ? CARD100[h] + ' ' : '') + ordStems(rest).map(s => ordEnd(s, c)).join(' ');
+}
+function roman(s) {
+  if (!/^(X{0,2})(IX|IV|V?I{0,3})$/.test(s)) return 0;
+  const v = { I: 1, V: 5, X: 10 }; let n = 0;
+  for (let i = 0; i < s.length; i++) { const a = v[s[i]], b = v[s[i + 1]] || 0; n += a < b ? -a : a; }
+  return n;
+}
+function prevWord(str, off) {
+  const m = str.slice(Math.max(0, off - 25), off).match(/([\p{L}.]+)\s*$/u);
+  return m ? m[1].toLowerCase() : '';
+}
+const LOC_PREP = new Set(['w', 'we', 'o', 'przy', 'po']), INS_PREP = new Set(['przed', 'między', 'pomiędzy', 'nad', 'pod']);
+const caseAfter = (str, off) => { const p = prevWord(str, off); return LOC_PREP.has(p) ? 'loc' : INS_PREP.has(p) ? 'ins' : 'gen'; };
+function plural(x, forms) { // forms: [1, 2–4, 5+, ułamek]
+  if (/[.,]/.test(x)) return forms[3];
+  const n = +x;
+  if (n === 1) return forms[0];
+  return n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? forms[1] : forms[2];
+}
+const MONTHS = 'stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia';
+const ROM = '[IVX]{1,6}';
+const NB = '(?<![\\p{L}\\d])', NA = '(?![\\p{L}\\d])';
+const adjByNext = (stem, next) => { // „św.”, „bł.”: odmiana z końcówki następnego słowa
+  const w = (next || '').replace(/[^\p{L}]/gu, '');
+  if (/(a|o)$/.test(w)) return stem + 'ego';
+  if (/[yi]$/.test(w)) return stem + 'ej';
+  if (/ą$/.test(w)) return stem + 'ą';
+  if (/em$/.test(w)) return stem + 'ym';
+  return stem + 'y';
+};
+// [skrót, zamiana, czy kropka może kończyć zdanie]
+const SPEAK_ABBR = [
+  ['m.in.', 'między innymi'], ['p.n.e.', 'przed naszą erą', 1], ['n.e.', 'naszej ery', 1], ['n.p.m.', 'nad poziomem morza', 1],
+  ['ok.', 'około'], ['tzw.', 'tak zwany'], ['np.', 'na przykład'], ['itd.', 'i tak dalej', 1], ['itp.', 'i tym podobne', 1],
+  ['tj.', 'to jest'], ['wg', 'według'], ['pw.', 'pod wezwaniem'], ['śś.', 'świętych'], ['zm.', 'zmarł'], ['ur.', 'urodzony'],
+  ['ul.', 'ulica'], ['pl.', 'plac'], ['al.', 'aleja'], ['gm.', 'gmina'], ['woj.', 'województwo'], ['pow.', 'powiat'],
+  ['ks.', 'ksiądz'], ['abp', 'arcybiskup'], ['bp', 'biskup'], ['kard.', 'kardynał'], ['gen.', 'generał'], ['płk', 'pułkownik'],
+  ['prof.', 'profesor'], ['hr.', 'hrabia'], ['nr', 'numer'], ['wsch.', 'wschodni'], ['zach.', 'zachodni'],
+];
+const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function forSpeech(t) {
+  // Połowa wieku: „w poł. XVII w.” → „w połowie”, „od poł.” → „od połowy”.
+  t = t.replace(new RegExp(NB + 'poł\\.', 'gu'), (m, off, s) => LOC_PREP.has(prevWord(s, off)) ? 'połowie' : 'połowy');
+  // Wieki: „XV w.”, „XV–XVI w.”, „XV i XVI wieku”, „XIX/XX w.”.
+  t = t.replace(new RegExp(`${NB}(${ROM}(?:\\s*(?:[–—\\-/,]|\\s(?:i|lub|albo|a)\\s)\\s*${ROM})*)\\s*(w\\.|wiek(?:u|iem|ach|ami|ów|i)?)(?!\\p{L})`, 'gu'),
+    (m, list, word, off, s) => {
+      const nums = list.match(/[IVX]+/g);
+      if (!nums.every(roman)) return m;
+      let c = caseAfter(s, off);
+      if (word === 'wiek' || word === 'wieki') c = 'nom';
+      else if (word === 'wiekiem' || word === 'wiekami') c = 'ins';
+      else if (word === 'wiekach') c = 'loc';
+      const w = word !== 'w.' ? word : c === 'ins' ? 'wiekiem' : 'wieku';
+      const oc = c === 'ins' ? 'loc' : c;
+      const spoken = list.replace(/\s*[–—\-/]\s*/g, ' i ').replace(/[IVX]+/g, r => ordWords(roman(r), oc));
+      return spoken + ' ' + w + (word === 'w.' && /^\s+\p{Lu}/u.test(s.slice(off + m.length)) ? '.' : '');
+    });
+  // „XV-wieczny” → „piętnastowieczny”.
+  t = t.replace(new RegExp(`${NB}(${ROM})\\s*[-‑–]\\s*(wieczn\\p{L}*)`, 'gu'),
+    (m, r, rest) => roman(r) ? ordStems(roman(r)).map(s => s + 'o').join('') + rest : m);
+  // „II wojna światowa”, „II Rzeczpospolita” (rodzaj żeński).
+  t = t.replace(new RegExp(`${NB}(${ROM})\\s+(wojn\\p{L}*|Rzeczy?pospolit\\p{L}*)`, 'gu'), (m, r, w) => {
+    if (!roman(r)) return m;
+    const c = /[ąę]$/.test(w) ? 'fins' : /a$/.test(w) ? 'fnom' : 'fgen';
+    return ordWords(roman(r), c) + ' ' + w;
+  });
+  // Władcy, papieże: „Zygmunt III”, „Jana III Sobieskiego”, „Janem Pawłem II”.
+  t = t.replace(new RegExp(`(?<!\\p{L})(\\p{Lu}\\p{Ll}+)\\s+(${ROM})${NA}`, 'gu'), (m, name, r) => {
+    if (!roman(r)) return m;
+    const c = /a$/.test(name) ? 'gen' : /(em|im|ie|u)$/.test(name) ? 'loc' : /owi$/.test(name) ? 'dat' : 'nom';
+    return name + ' ' + ordWords(roman(r), c);
+  });
+  // Lata: „w 1655 r.”, „przed 1900 rokiem”.
+  // Zakresy („od 1886 do 1945 roku”, „11 i 12 listopada”, „1655–1660 r.”): każda liczba słownie.
+  const RANGE = d => `(${d}(?:\\s*(?:[–—\\-]|\\s(?:i|do|na|lub|a)\\s)\\s*${d})*)`;
+  const ordList = (list, c) => list.replace(/\s*[–—\-]\s*/g, ' do ').replace(/\d+/g, n => ordWords(+n, c));
+  t = t.replace(new RegExp(`${NB}${RANGE('\\d{3,4}')}\\s*(r\\.|roku|rokiem)(?!\\p{L})`, 'gu'), (m, list, word, off, s) => {
+    let c = caseAfter(s, off);
+    if (word === 'rokiem') c = 'ins';
+    const w = word !== 'r.' ? word : c === 'ins' ? 'rokiem' : 'roku';
+    const end = word === 'r.' && /^\s+\p{Lu}/u.test(s.slice(off + m.length)) ? '.' : '';
+    return ordList(list, c === 'ins' ? 'loc' : c) + ' ' + w + end;
+  });
+  // Daty: „5 maja 1655” → „piątego maja tysiąc sześćset pięćdziesiątego piątego”.
+  t = t.replace(new RegExp(`(${MONTHS})\\s+(\\d{3,4})${NA}`, 'gu'), (m, mo, y) => mo + ' ' + ordWords(+y, 'gen'));
+  t = t.replace(new RegExp(`${NB}${RANGE('\\d{1,2}')}\\s+(${MONTHS})(?!\\p{L})`, 'gu'), (m, list, mo) =>
+    list.match(/\d+/g).every(d => +d >= 1 && +d <= 31) ? ordList(list, 'gen') + ' ' + mo : m);
+  // Jednostki i liczebniki skrócone po liczbie.
+  const UNITS = { km: ['kilometr', 'kilometry', 'kilometrów', 'kilometra'], m: ['metr', 'metry', 'metrów', 'metra'],
+    ha: ['hektar', 'hektary', 'hektarów', 'hektara'], 'tys.': ['tysiąc', 'tysiące', 'tysięcy', 'tysiąca'],
+    mln: ['milion', 'miliony', 'milionów', 'miliona'], mld: ['miliard', 'miliardy', 'miliardów', 'miliarda'] };
+  const GEN_PREP = new Set(['około', 'ok.', 'od', 'do', 'z', 'ze', 'ponad', 'blisko', 'koło', 'kilku', 'kilkunastu']);
+  t = t.replace(new RegExp(`${NB}(\\d+(?:[.,]\\d+)?)\\s*(km|m|ha|tys\\.|mln|mld)(?![\\p{L}\\d])`, 'gu'), (m, n, u, off, s) => {
+    const f = UNITS[u], word = GEN_PREP.has(prevWord(s, off)) && !/[.,]/.test(n) ? (+n === 1 ? f[3] : f[2]) : plural(n, f);
+    return n + ' ' + word + (u === 'tys.' && /^\s+\p{Lu}/u.test(s.slice(off + m.length)) ? '.' : '');
+  });
+  t = t.replace(/(\d)\s*%/g, '$1 procent');
+  // Święci i błogosławieni: „kościół św. Anny” → „świętej Anny”.
+  t = t.replace(new RegExp(`${NB}([Śś]w|[Bb]ł)\\.\\s+(\\p{L}+)(\\s+i\\s+\\p{Lu})?`, 'gu'), (m, a, next, and) => {
+    const stem = /^[Śś]/.test(a) ? 'święt' : 'błogosławion';
+    return (and ? stem + 'ych' : adjByNext(stem, next)) + ' ' + next + (and || '');
+  });
+  t = t.replace(new RegExp(`${NB}im\\.(?=\\s+\\p{Lu})`, 'gu'), 'imienia'); // „szkoła im. Jana”, ale nie „pomógł im.”
+  for (const [a, full, canEnd] of SPEAK_ABBR) {
+    t = t.replace(new RegExp(NB + escRx(a) + (a.endsWith('.') ? '' : NA), 'giu'), (m, off, s) =>
+      full + (canEnd && /^\s+\p{Lu}/u.test(s.slice(off + m.length)) ? '.' : ''));
+  }
+  return t;
+}
+
 async function wikiNarration(p, m) {
   if (p.village) {
     // Ze wsi czytamy tylko zdania z perełkami, a nie położenie administracyjne.
@@ -566,6 +701,7 @@ function speak(text) {
   return new Promise(res => {
     if (!('speechSynthesis' in window)) { duck(false); return res(); }
     speechSynthesis.cancel(); stopSpeech = false; speaking = true;
+    if (S.lang === 'pl') text = forSpeech(text);
     // Krótkie kawałki: długie wypowiedzi bywają ucinane przez Chrome.
     const parts = []; let buf = '';
     for (const s of splitSentences(text)) { if ((buf + ' ' + s).length > 200 && buf) { parts.push(buf); buf = s; } else buf = buf ? buf + ' ' + s : s; }
