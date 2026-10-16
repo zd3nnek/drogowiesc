@@ -194,9 +194,10 @@ try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; 
     <div class="chips" id="sInterests"></div>
     <label>Jak często mówić
       <select id="sFreq">
-        <option value="1.6">Rzadko</option>
-        <option value="1" selected>Normalnie</option>
-        <option value="0.6">Często</option>
+        <option value="1.6">Rzadko (w aucie co 4 min)</option>
+        <option value="1" selected>Normalnie (co 2,5 min)</option>
+        <option value="0.6">Często (co 1,5 min)</option>
+        <option value="0.3">Bardzo często (co 45 s)</option>
       </select>
     </label>
     <label>Próg ciekawości: <span id="vMin"></span>
@@ -550,7 +551,8 @@ function maybeFetch() {
 const heardRecently = id => heard[id] && Date.now() - heard[id] < 3 * 36e5;
 function interest(p) {
   if (p.excluded || p.lat == null || heardRecently(p.id)) return -1;
-  if (p.village) {
+  // Wieś z gotową opowieścią nie musi przechodzić testu perełek z Wikipedii na żywo (niżej liczy się jak inne gotowe).
+  if (p.village && !hasReady(p)) {
     // Wieś liczy się dopiero po przeczytaniu artykułu i tylko z co najmniej jedną konkretną perełką.
     if (p.gem == null || p.gem < 2) return -1;
     const s = 2.6 + Math.min(p.gem, 6) * 0.25 + (Math.log10((p.views || 0) + 10) - 1) * 0.3;
@@ -570,6 +572,11 @@ function threshold() {
   const silentMin = Math.max(0, (clock() - lastSpokeAt) / 60000 - 5);
   return S.minScore - Math.min(1.2, Math.floor(silentMin / 5) * 0.3 + (silentMin > 0 ? 0.3 : 0));
 }
+// Miasto to obszar, nie punkt: współrzędne to jego środek, a droga często go omija albo zaczyna się w nim podróż.
+// Promień z długości artykułu (Kunów ~1,4 km, Ostrowiec ~4,6 km, większe do 5 km).
+const isTown = p => /^miasto/i.test(p.desc || '');
+const townRadius = p => clamp((p.length || 10000) / 1000 * 80, 1000, 5000);
+const inTown = p => isTown(p) && st.pos && dist(st.pos, p) < townRadius(p);
 function candidates(m, H) {
   const out = [], min = threshold();
   for (const p of POIS.values()) {
@@ -579,8 +586,11 @@ function candidates(m, H) {
     // Sławne miejsca mają większy zasięg (do 1,6× horyzontu), góry widać z daleka (do 4,5×).
     let reach = H;
     if (m !== 'walk') reach = p.cats.includes('gory') ? H * clamp(1 + (s - 3.5) * 2, 1, 4.5) : H * clamp(1 + (s - 3.5) * 0.6, 1, 1.6);
+    const town = isTown(p);
+    if (town) reach += townRadius(p);
     if (d > reach) continue;
     let a = null;
+    if (town && d < townRadius(p)) { out.push({ p, d, a, s, sc: s }); continue; } // jesteśmy w mieście: bez stożka
     if (st.heading != null && m !== 'walk') {
       a = relAngle(bearing(st.pos, p), st.heading);
       if (Math.abs(a) > MODES[m].cone && d > 250) continue;
@@ -952,7 +962,7 @@ async function announce(c) {
     if (!text) return;
     const d = dist(st.pos, p);
     const a = st.heading != null ? relAngle(bearing(st.pos, p), st.heading) : null;
-    const dirp = dirPhrase(d, a, m), place = `${p.village ? 'wieś ' : ''}${cleanTitle(p.title)}`;
+    const dirp = inTown(p) ? 'Jedziesz przez miasto' : dirPhrase(d, a, m), place = `${p.village ? 'wieś ' : ''}${cleanTitle(p.title)}`;
     const intro = `${dirp}: ${place}.`;
     current = addJournal({ p, m, d, s: c.s, src, intro, text, err, dirp, place });
     showNow(current);
@@ -1142,7 +1152,12 @@ function initUI() {
     const txt = journal.map(e => [new Date(e.t).toLocaleString('pl-PL').slice(0, 17), e.id, e.title, e.src, e.mode,
       e.kmh + 'km/h', e.dist + 'm', e.score, e.vote > 0 ? 'ciekawe' : e.vote < 0 ? 'nudne' : '', e.skipped ? 'pominięte' : '',
       e.err || '', e.src === 'gotowe' ? '' : (e.text || '').slice(0, 120)].join(' | ')).join('\n');
-    try { await navigator.clipboard.writeText(txt); setStatus('Dziennik skopiowany (' + journal.length + ' wpisów).'); }
+    // W aplikacji Android: na początku linia diagnostyki pracy w tle (speech-shim.js).
+    const diag = window.odkrywcaDiag ? await window.odkrywcaDiag().catch(() => '') : '';
+    // Ustawienia, przy których jechano (do porównywania odstępów i progów między testami).
+    const ust = ['USTAWIENIA', 'częstość ×' + S.freq + ' (auto co ' + Math.round(MODES.car.gap * parseFloat(S.freq)) + ' s)',
+      'próg ' + S.minScore, 'tryb ' + S.mode, 'zainteresowania: ' + S.interests.join(',')].join(' | ');
+    try { await navigator.clipboard.writeText([diag, ust, txt].filter(Boolean).join('\n')); setStatus('Dziennik skopiowany (' + journal.length + ' wpisów).'); }
     catch (e) { setStatus('Nie udało się skopiować do schowka.'); }
   };
   $('#bClear').onclick = () => { journal = []; LS.set('journal', journal); renderJournal(); };
