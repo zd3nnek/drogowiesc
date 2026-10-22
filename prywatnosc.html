@@ -27,7 +27,7 @@ a{color:inherit;text-underline-offset:3px}
 <main>
   <div class="sign"><div>DROGOWIEŚĆ</div></div>
   <h1>Polityka prywatności aplikacji Drogowieść</h1>
-  <p class="mute">Wersja robocza z 22 października 2026 r. Dotyczy aplikacji Drogowieść na Androida oraz wersji w przeglądarce.</p>
+  <p class="mute">Wersja z 23 października 2026 r. Dotyczy aplikacji Drogowieść na Androida oraz wersji w przeglądarce.</p>
 
   <div class="card">
     <p><b>W skrócie:</b> nie zakładasz konta, a aplikacja nie wysyła autorowi żadnych danych. Nie ma reklam ani statystyk. Twoja lokalizacja służy tylko do wyboru miejsc w pobliżu i jest przetwarzana w telefonie. Niektóre funkcje łączą się z zewnętrznymi serwisami. Opisujemy je niżej.</p>
@@ -39,25 +39,29 @@ a{color:inherit;text-underline-offset:3px}
 
   <h2>Lokalizacja</h2>
   <ul>
-    <li>Aplikacja prosi o dostęp do lokalizacji dopiero po naciśnięciu „Start podróży” i korzysta z niej tylko w czasie podróży, gdy aplikacja jest otwarta.</li>
+    <li>Aplikacja prosi o dostęp do lokalizacji dopiero po naciśnięciu „Start podróży” i korzysta z niej tylko w czasie podróży, do naciśnięcia „Zakończ”. Na Androidzie działa wtedy także przy zgaszonym ekranie, co sygnalizuje stałe powiadomienie. Wersja w przeglądarce działa tylko przy włączonym ekranie i otwartej stronie.</li>
     <li>Na podstawie lokalizacji, prędkości i kierunku jazdy telefon sam wybiera, o którym miejscu opowiedzieć. Większość opowieści jest zapisana w aplikacji i nie wymaga internetu.</li>
-    <li>Lokalizacja nie jest zapisywana ani wysyłana do autora.</li>
+    <li>Trasa przejazdu i odwiedzone miejsca zapisują się tylko w telefonie (w „Podróżach” i „Moich odkryciach”). Lokalizacja nie jest wysyłana do autora.</li>
   </ul>
 
   <h2>Zewnętrzne serwisy</h2>
   <p>Niektóre funkcje łączą się bezpośrednio z telefonu z serwisami innych firm. Każdy z nich odpowiada za dane, które do niego trafiają, według własnej polityki prywatności. Jak przy każdym połączeniu z internetem, serwis widzi adres IP telefonu.</p>
   <ul>
     <li><b>Wikipedia</b> (Wikimedia Foundation). Gdy w okolicy brakuje gotowej opowieści, aplikacja wysyła przybliżone współrzędne, żeby znaleźć artykuły o pobliskich miejscach, i pobiera ich treść. <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy">Polityka prywatności Wikimedia</a>.</li>
-    <li><b>OpenStreetMap</b> (OpenStreetMap Foundation). Po otwarciu mapy pobierane są kafelki mapy dla oglądanego obszaru. <a href="https://osmfoundation.org/wiki/Privacy_Policy">Polityka prywatności OSMF</a>.</li>
-    <li><b>Anthropic</b>, tylko jeśli włączysz „Opowieści z AI” i podasz własny klucz API. Do Anthropic trafiają wtedy nazwa i opis miejsca, polecenie przygotowania opowieści oraz Twój klucz. <a href="https://www.anthropic.com/legal/privacy">Polityka prywatności Anthropic</a>.</li>
+    <li><b>Mapa.</b> Po otwarciu mapy pobierane są kafelki dla oglądanego obszaru: w aplikacji na Androida z serwerów <a href="https://openfreemap.org">OpenFreeMap</a>, w wersji w przeglądarce z serwerów OpenStreetMap (OpenStreetMap Foundation, <a href="https://osmfoundation.org/wiki/Privacy_Policy">polityka prywatności OSMF</a>).</li>
+    <li><b>Anthropic</b>, tylko w wersji w przeglądarce i tylko jeśli włączysz „Opowieści z AI” i podasz własny klucz API. Do Anthropic trafiają wtedy nazwa i opis miejsca, polecenie przygotowania opowieści oraz Twój klucz. <a href="https://www.anthropic.com/legal/privacy">Polityka prywatności Anthropic</a>.</li>
     <li><b>Serwery z bibliotekami</b> (cdnjs prowadzony przez Cloudflare, jsDelivr). Wersja w przeglądarce pobiera z nich bibliotekę mapy i, przy opowieściach z AI, bibliotekę Anthropic.</li>
   </ul>
 
   <h2>Dane zapisane w telefonie</h2>
-  <p>Ustawienia, dziennik usłyszanych opowieści, lista już opowiedzianych miejsc i ewentualny klucz API są zapisane tylko w pamięci telefonu lub przeglądarki. Nikt poza Tobą nie ma do nich dostępu. Usuniesz je przyciskami „Wyczyść” i „Zapomnij usłyszane” w aplikacji, wyczyszczeniem danych aplikacji albo jej odinstalowaniem.</p>
+  <p>Ustawienia, podróże (trasy, usłyszane opowieści i Twoje oceny 👍/👎), odkrycia, lista już opowiedzianych miejsc i ewentualny klucz API są zapisane tylko w pamięci telefonu lub przeglądarki. Nikt poza Tobą nie ma do nich dostępu. Pojedynczą podróż usuniesz przyciskiem „Usuń tę podróż”, usłyszane miejsca — „Zapomnij usłyszane”, a wszystko — wyczyszczeniem danych aplikacji albo jej odinstalowaniem.</p>
+  <p>Czujnik światła telefonu służy tylko do przyciemniania mapy w ciemności. Jego odczyty nie opuszczają telefonu.</p>
+
+  <h2>Udostępnianie obrazka</h2>
+  <p>Obrazek z podróży albo z odkryć (mapka trasy, liczby, ciekawostka) powstaje w telefonie. Trafia do innych osób tylko wtedy, gdy sam go wyślesz przez systemowe „Udostępnij”. Przed wysłaniem możesz ukryć początek i koniec trasy.</p>
 
   <h2>Korespondencja</h2>
-  <p>Jeśli napiszesz na adres <a href="mailto:kontakt@drogowiesc.pl">kontakt@drogowiesc.pl</a>, na przykład ze zgłoszeniem błędu, administratorem Twojego adresu e-mail i treści wiadomości jest Daniel Jasion. Dane te są używane wyłącznie do odpowiedzi i obsługi zgłoszenia. Podstawą jest prawnie uzasadniony interes w odpowiedzi na wiadomość (art. 6 ust. 1 lit. f RODO). Wiadomości przechowujemy przez czas potrzebny do załatwienia sprawy, nie dłużej niż 12 miesięcy od ostatniej wiadomości. Poczta działa w usłudze Gmail firmy Google, która może przetwarzać dane także poza Europejskim Obszarem Gospodarczym na zasadach opisanych w <a href="https://policies.google.com/privacy?hl=pl">polityce prywatności Google</a>.</p>
+  <p>Jeśli napiszesz na adres <a href="mailto:kontakt@drogowiesc.pl">kontakt@drogowiesc.pl</a>, na przykład ze zgłoszeniem błędu, administratorem Twojego adresu e-mail i treści wiadomości jest Daniel Jasion. Dane te są używane wyłącznie do odpowiedzi i obsługi zgłoszenia. Podstawą jest prawnie uzasadniony interes w odpowiedzi na wiadomość (art. 6 ust. 1 lit. f RODO). Wiadomości przechowujemy przez czas potrzebny do załatwienia sprawy, nie dłużej niż 12 miesięcy od ostatniej wiadomości. Skrzynka pocztowa działa w usłudze firmy OVH (OVHcloud), która przechowuje wiadomości na zlecenie autora.</p>
   <p>Do zgłoszenia możesz dołączyć dziennik podróży (w aplikacji: Podróże → wybrany przejazd → „Kopiuj dziennik podróży”, a potem wklejenie do wiadomości). Dziennik wysyłasz sam; aplikacja nie robi tego automatycznie. Zawiera nazwy miejsc, o których była mowa, godziny, prędkość, Twoje oceny 👍/👎 i ustawienia aplikacji, ale nie zawiera Twoich współrzędnych. Używamy go wyłącznie do znalezienia i poprawienia błędów, na tych samych zasadach i przez ten sam czas co treść wiadomości.</p>
   <p>Masz prawo dostępu do swoich danych, ich sprostowania, usunięcia lub ograniczenia przetwarzania, prawo sprzeciwu oraz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, <a href="https://uodo.gov.pl">uodo.gov.pl</a>).</p>
 
