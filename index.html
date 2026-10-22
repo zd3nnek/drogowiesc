@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Odkrywca — prototyp</title>
+<title>Drogowieść — prototyp</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 @font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;src:url(fonty/barlow-400-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
@@ -156,7 +156,7 @@ try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; 
 </svg>
 
 <header class="top">
-  <div class="brand">ODKRYWCA</div>
+  <div class="brand">DROGOWIEŚĆ</div>
   <div class="mode"><svg class="ic"><use href="#i-car"/></svg><span id="modeLbl">tryb automatyczny</span></div>
 </header>
 <div id="status">Gotowy. Naciśnij Start.</div>
@@ -258,14 +258,14 @@ try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; 
 <details id="dAbout">
   <summary><svg class="ic"><use href="#i-info"/></svg>O programie</summary>
   <div class="about">
-    <p class="hint">Wersja 0.1 · wersja testowa<br>Autor: Daniel Jasion · Kontakt: odkrywca.aplikacja@gmail.com</p>
+    <p class="hint">Wersja 0.1 · wersja testowa<br>Autor: Daniel Jasion · Kontakt: kontakt@drogowiesc.pl</p>
     <h3>Bezpieczeństwo</h3>
-    <p>Nie obsługuj aplikacji podczas prowadzenia. Ustaw ją przed jazdą, a w trakcie korzystaj tylko z głosu. Odkrywca nie jest nawigacją i nie zastępuje znaków drogowych ani przepisów. Wymienione miejsca mogą być prywatne, zamknięte lub niebezpieczne. Wzmianka w aplikacji nie oznacza, że wolno tam wejść.</p>
+    <p>Nie obsługuj aplikacji podczas prowadzenia. Ustaw ją przed jazdą, a w trakcie korzystaj tylko z głosu. Drogowieść nie jest nawigacją i nie zastępuje znaków drogowych ani przepisów. Wymienione miejsca mogą być prywatne, zamknięte lub niebezpieczne. Wzmianka w aplikacji nie oznacza, że wolno tam wejść.</p>
     <h3>Skąd są opowieści</h3>
     <p>Gotowe opowieści opracowano na podstawie artykułów <b>polskiej Wikipedii</b>. Teksty skrócono, przeredagowano i dostosowano do czytania na głos. Autorami artykułów źródłowych są wolontariusze Wikipedii, a ich listę zawiera historia zmian każdego artykułu. Link „źródło” przy każdej opowieści prowadzi do artykułu.</p>
     <p>Artykuły i opowieści z nich opracowane są dostępne na licencji <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.pl" target="_blank" rel="noopener">Creative Commons Uznanie autorstwa – Na tych samych warunkach 4.0 (CC BY-SA 4.0)</a>. Gdy nie ma gotowej opowieści, aplikacja czyta na żywo początek artykułu z Wikipedii, na tej samej licencji.</p>
-    <p>Opowieści przygotowano z pomocą sztucznej inteligencji i sprawdzono z artykułami źródłowymi, ale mogą zawierać błędy lub nieaktualne informacje. Zgłoś błąd: odkrywca.aplikacja@gmail.com.</p>
-    <p class="hint">Wikipedia jest znakiem towarowym Wikimedia Foundation. Odkrywca nie jest powiązany z Wikimedia Foundation ani przez nią wspierany.</p>
+    <p>Opowieści przygotowano z pomocą sztucznej inteligencji i sprawdzono z artykułami źródłowymi, ale mogą zawierać błędy lub nieaktualne informacje. Zgłoś błąd: kontakt@drogowiesc.pl.</p>
+    <p class="hint">Wikipedia jest znakiem towarowym Wikimedia Foundation. Drogowieść nie jest powiązana z Wikimedia Foundation ani przez nią wspierana.</p>
     <h3>Mapa</h3>
     <p>Dane mapy © współtwórcy <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, licencja ODbL. Wyświetlanie mapy: biblioteka Leaflet.</p>
     <h3>Opowieści z AI (opcjonalne)</h3>
@@ -279,7 +279,7 @@ try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; 
       <li>Przy włączonych opowieściach z AI do Anthropic trafiają nazwa i opis miejsca oraz Twój klucz API.</li>
       <li>Ustawienia, dziennik i klucz API są zapisane tylko w tym telefonie. Usuwa je przycisk „Wyczyść” albo odinstalowanie aplikacji.</li>
     </ul>
-    <p>Aplikacja nie przekazuje autorowi żadnych danych. Jeśli napiszesz e-mail, użyjemy go tylko do odpowiedzi. W sprawach prywatności: Daniel Jasion, odkrywca.aplikacja@gmail.com. <a href="https://zd3nnek.github.io/odkrywca/prywatnosc.html" target="_blank" rel="noopener">Pełna polityka prywatności</a></p>
+    <p>Aplikacja nie przekazuje autorowi żadnych danych. Jeśli napiszesz e-mail, użyjemy go tylko do odpowiedzi. W sprawach prywatności: Daniel Jasion, kontakt@drogowiesc.pl. <a href="https://zd3nnek.github.io/odkrywca/prywatnosc.html" target="_blank" rel="noopener">Pełna polityka prywatności</a></p>
     <h3>Licencje oprogramowania</h3>
     <ul class="hint">
       <li>Leaflet © Vladimir Agafonkin, CloudMade i współtwórcy, licencja BSD-2-Clause</li>
@@ -1066,7 +1066,7 @@ function setStatus(t) { $('#status').textContent = t; }
 
 async function start() {
   running = true; $('#start').innerHTML = icon('i-stop') + '<span>Zakończ</span>'; $('#start').classList.add('on');
-  speak('Odkrywca włączony.');
+  speak('Drogowieść włączona.');
   try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   if (!sim) {
     if (!navigator.geolocation) { setStatus('Ta przeglądarka nie udostępnia GPS.'); return; }
