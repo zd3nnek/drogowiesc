@@ -114,11 +114,91 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
 .about h3{font:700 15px/1.2 var(--head);letter-spacing:.04em;text-transform:uppercase;margin:8px 0 0}
 .about p,.about ul{margin:0}
 .about ul{padding-left:18px;display:grid;gap:4px}
+/* Tekst zwinięty do 2 linijek, pełny po dotknięciu (.pelny) — jak w aplikacji na Androida. */
+.story .meta{align-items:center}
+.story .txt{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;cursor:pointer}
+.story.pelny .txt{display:block;-webkit-line-clamp:unset}
+.story .wiecej{min-height:0;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--btn);color:var(--fg)}
+.seg2{grid-template-columns:repeat(2,1fr)}
+/* Dopisek o wersji próbnej (użytkownik 2026-10-23). */
+.proba{margin:0;padding:8px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);color:var(--mute);font-size:13px;line-height:1.35}
+.proba b{color:var(--fg)}
+
+/* Wygląd „Nocna trasa” — przeniesiony z aplikacji na Androida (aplikacja-natywna/ui/index.html, 2026-10-23), domyślny.
+   data-pora="dzien" = jasna wersja. Bez animacji w ruchu — ekran ogląda się też w czasie jazdy. */
+:root[data-look="nocna"][data-pora="noc"]{
+  --bg:#0d0e0c;--card:#191a17;--line:#2e2b26;--fg:#f2efe9;--mute:#a39f97;--btn:#22211d;--input:#141512;
+  --sign:#6b3f24;--on-sign:#ffffff;--prog:#f2a65a;--go:#f2a65a;--on-go:#1a0f07;--stop:#c4372c;--ok:#3f9e68;
+  --seg:#f2a65a;--on-seg:#1a0f07;--acc:#f2a65a;--r:14px;color-scheme:dark;
+  --goBg:linear-gradient(180deg,#ffbf7a,#f2a65a 45%,#c0713a);--goSh:0 10px 28px -10px rgba(242,166,90,.6),inset 0 1px 0 rgba(255,255,255,.45);
+  --storyBg:linear-gradient(160deg,rgba(192,113,58,.3),#191a17 62%);--storyLine:rgba(242,166,90,.32);--storySh:0 14px 40px -20px rgba(242,166,90,.6);
+  --glow:radial-gradient(closest-side,rgba(192,113,58,.28),transparent)}
+:root[data-look="nocna"][data-pora="dzien"]{
+  --bg:#f6f2ea;--card:#fffdf8;--line:#e4dccd;--fg:#22180f;--mute:#76695a;--btn:#efe7da;--input:#fbf7f0;
+  --sign:#6b3f24;--on-sign:#ffffff;--prog:#c0713a;--go:#c0713a;--on-go:#ffffff;--stop:#b3261e;--ok:#2e7d4f;
+  --seg:#6b3f24;--on-seg:#ffffff;--acc:#c0713a;--r:14px;color-scheme:light;
+  --goBg:linear-gradient(180deg,#d98a4c,#c0713a 50%,#9c5528);--goSh:0 10px 22px -10px rgba(156,85,40,.7),inset 0 1px 0 rgba(255,255,255,.35);
+  --storyBg:linear-gradient(160deg,#fbe6d0,#fffdf8 66%);--storyLine:#efcfae;--storySh:0 14px 32px -22px rgba(192,113,58,.7);
+  --glow:radial-gradient(closest-side,rgba(242,166,90,.22),transparent)}
+[data-look="nocna"]{background:var(--bg)}
+[data-look="nocna"] body{background:transparent}
+[data-look="nocna"] body::before{content:"";position:fixed;left:-25%;right:-25%;top:-160px;height:480px;z-index:-1;pointer-events:none;
+  background:var(--glow);opacity:.85}
+[data-look="nocna"] .brand{letter-spacing:.06em}
+[data-look="nocna"] .mode{border:1px solid var(--line);border-radius:99px;padding:4px 10px;background:var(--card)}
+[data-look="nocna"] .story{background:var(--storyBg);border-color:var(--storyLine);box-shadow:var(--storySh)}
+[data-look="nocna"] .ctr button{background:var(--card);border:1px solid var(--line)}
+[data-look="nocna"] .ctr #bPause,[data-look="nocna"] #start:not(.on){background:var(--goBg);color:var(--on-go);box-shadow:var(--goSh);border:0}
+[data-look="nocna"] .ctr .vote.sel{background:var(--ok);color:#fff}
+[data-look="nocna"] .ctr .vote.bad.sel{background:var(--stop);color:#fff}
+[data-look="nocna"] #start{letter-spacing:.06em;text-transform:uppercase}
+[data-look="nocna"] .sections{border-top:0;display:grid;gap:8px}
+[data-look="nocna"] .sections>details:not([open])>summary .pod{display:none}
+[data-look="nocna"] .sections>details{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:0 12px}
+[data-look="nocna"] .sections>details>summary{font-family:var(--head);font-size:17px;letter-spacing:.04em;text-transform:uppercase}
+[data-look="nocna"] .sections>details>summary .ic{color:var(--acc)}
+[data-look="nocna"] .lbl{color:var(--acc)}
+/* Mapa nocą przyciemniona (kafelki OpenStreetMap są tylko jasne). */
+[data-look="nocna"][data-pora="noc"] #map .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}
+/* Animacje tylko na postoju: .ruch (> 10 km/h, koniec < 5 km/h) zatrzymuje wszystko; systemowe „ogranicz animacje” też. */
+.eq{display:none}
+[data-look="nocna"].mowi .story .eq{display:inline-flex;gap:2px;align-items:center;height:12px;margin-right:2px}
+[data-look="nocna"] .eq i{width:3px;height:45%;border-radius:2px;background:var(--acc)}
+[data-look="nocna"] .mode::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--mute);flex:none}
+[data-look="nocna"].trwa .mode::before{background:#4fc47f}
+[data-look="nocna"] #start{position:relative;overflow:hidden}
+[data-look="nocna"] #start::after{content:"";position:absolute;inset:0;pointer-events:none;transform:translateX(-120%);
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.38) 50%,transparent 70%)}
+/* Kafelki: zamknięte sekcje 2 w rzędzie, otwarta na całą szerokość (jedna naraz); kafelek sam w rzędzie też na całą
+   szerokość — `szerokieKafle()`. Podpisy pod nazwą tylko na kafelkach. */
+.sections>details>summary .sub{display:none}
+[data-look="nocna"] .sections{grid-template-columns:repeat(2,minmax(0,1fr))}
+[data-look="nocna"] .sections>details[open],[data-look="nocna"] .sections>details.szeroki{grid-column:1/-1}
+[data-look="nocna"] .sections>details:not([open])>summary{flex-direction:column;align-items:flex-start;gap:3px;min-height:86px;padding:12px 0}
+[data-look="nocna"] .sections>details:not([open])>summary::after{display:none}
+[data-look="nocna"] .sections>details:not([open])>summary .sub{display:block;font:500 12.5px/1.3 var(--body);letter-spacing:0;text-transform:none;color:var(--mute)}
+@media (prefers-reduced-motion: no-preference){
+  [data-look="nocna"]:not(.ruch).mowi .eq i{animation:eq 1s ease-in-out infinite}
+  [data-look="nocna"] .eq i:nth-child(2){animation-delay:-.3s}[data-look="nocna"] .eq i:nth-child(3){animation-delay:-.6s}
+  [data-look="nocna"] .eq i:nth-child(4){animation-delay:-.15s}
+  [data-look="nocna"].trwa:not(.ruch) .mode::before{animation:puls 2s infinite}
+  [data-look="nocna"]:not(.ruch) #start:not(.on)::after{animation:blysk 5s ease-in-out infinite}
+  [data-look="nocna"]:not(.ruch) body::before{animation:oddech 7s ease-in-out infinite}
+}
+@keyframes oddech{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+@keyframes eq{50%{height:100%}}
+@keyframes puls{0%{box-shadow:0 0 0 0 rgba(79,196,127,.6)}70%{box-shadow:0 0 0 8px rgba(79,196,127,0)}100%{box-shadow:0 0 0 0 rgba(79,196,127,0)}}
+@keyframes blysk{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}button:active{transform:none}}
 </style>
 <script>
 // Motyw ustawiony ręcznie stosujemy przed narysowaniem strony, żeby nie mignął zły kolor.
-try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+// „Nocna trasa” (domyślna) przy Automatycznym: tu tylko z godziny (6–18 = dzień), dokładnie według słońca poprawia applyTheme().
+try {
+  const s = JSON.parse(localStorage.getItem('odk_settings') || '{}'), t = s.theme, d = document.documentElement;
+  if (t === 'light' || t === 'dark') d.dataset.theme = t;
+  if (s.look !== 'klasyczny' || localStorage.getItem('odk_nocnaDomyslna') == null) { const h = new Date().getHours(); d.dataset.look = 'nocna'; d.dataset.pora = t === 'light' ? 'dzien' : t === 'dark' ? 'noc' : h >= 6 && h < 18 ? 'dzien' : 'noc'; }
+} catch (e) {}
 </script>
 </head>
 <body>
@@ -173,15 +253,39 @@ try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; 
 
 <button id="start"><svg class="ic"><use href="#i-go"/></svg><span>Start podróży</span></button>
 <p class="hint">Telefon zapyta o lokalizację dopiero po naciśnięciu Start. Ekran musi pozostać włączony (aplikacja prosi telefon o niewygaszanie). Muzyka z innej aplikacji może grać w tle.</p>
+<p class="proba"><b>Wersja próbna w przeglądarce.</b> Działa inaczej niż aplikacja na Androida, dlatego nie wszystkie funkcje mogą tu działać albo działać prawidłowo.</p>
 
 <div class="sections">
+<details id="dMap">
+  <summary><svg class="ic"><use href="#i-map"/></svg><span class="t">Mapa<span class="pod"> (podgląd)</span></span><small class="sub">trasa i miejsca wokół</small></summary>
+  <div><div id="map"></div>
+    <p class="hint">● pomarańczowe = kandydaci · zielone = opowiedziane · szare = odfiltrowane</p></div>
+</details>
+
 <details>
-  <summary><svg class="ic"><use href="#i-settings"/></svg>Ustawienia</summary>
+  <summary><svg class="ic"><use href="#i-list"/></svg><span class="t">Dziennik</span><small class="sub">usłyszane opowieści</small></summary>
   <div>
+    <div class="row">
+      <button id="bCopy">Kopiuj dziennik</button>
+      <button id="bClear">Wyczyść</button>
+      <button id="bResetHeard">Zapomnij usłyszane</button>
+    </div>
+    <div id="journal"></div>
+  </div>
+</details>
+
+<details>
+  <summary><svg class="ic"><use href="#i-settings"/></svg><span class="t">Ustawienia</span><small class="sub">wygląd, głos, częstość</small></summary>
+  <div>
+    <div class="lbl">Wygląd</div>
+    <div class="seg seg2" id="sLook" role="radiogroup" aria-label="Wygląd">
+      <button data-v="klasyczny" role="radio">Klasyczny</button><button data-v="nocna" role="radio">Nocna trasa</button>
+    </div>
     <div class="lbl">Motyw</div>
     <div class="seg" id="sTheme" role="radiogroup" aria-label="Motyw">
       <button data-v="auto" role="radio">Automatyczny</button><button data-v="light" role="radio">Jasny</button><button data-v="dark" role="radio">Ciemny</button>
     </div>
+    <span class="hint">W wyglądzie „Nocna trasa” Automatyczny = jasny w dzień, ciemny po zachodzie słońca. W klasycznym — jak w telefonie.</span>
     <label>Tryb podróży
       <select id="sMode">
         <option value="auto">Automatycznie (z prędkości)</option>
@@ -225,40 +329,11 @@ try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; 
   </div>
 </details>
 
-<details id="dSim">
-  <summary><svg class="ic"><use href="#i-route"/></svg>Symulacja trasy (test na komputerze)</summary>
-  <div>
-    <label>Trasa <select id="simRoute"></select></label>
-    <label>Przyspieszenie czasu
-      <select id="simMult"><option>1</option><option>3</option><option selected>10</option><option>30</option></select>
-    </label>
-    <button id="bSim">Start symulacji</button>
-    <p class="hint">Trasy są przybliżone (odcinki proste). Symulacja zastępuje GPS.</p>
-  </div>
-</details>
-
-<details id="dMap">
-  <summary><svg class="ic"><use href="#i-map"/></svg>Mapa (podgląd)</summary>
-  <div><div id="map"></div>
-    <p class="hint">● pomarańczowe = kandydaci · zielone = opowiedziane · szare = odfiltrowane</p></div>
-</details>
-
-<details>
-  <summary><svg class="ic"><use href="#i-list"/></svg>Dziennik</summary>
-  <div>
-    <div class="row">
-      <button id="bCopy">Kopiuj dziennik</button>
-      <button id="bClear">Wyczyść</button>
-      <button id="bResetHeard">Zapomnij usłyszane</button>
-    </div>
-    <div id="journal"></div>
-  </div>
-</details>
-
 <details id="dAbout">
-  <summary><svg class="ic"><use href="#i-info"/></svg>O programie</summary>
+  <summary><svg class="ic"><use href="#i-info"/></svg><span class="t">O programie</span><small class="sub">zasady, źródła, prywatność</small></summary>
   <div class="about">
-    <p class="hint">Wersja w przeglądarce 0.1 · wersja testowa · opowieści z 23.10.2026 (ok. 2200)<br>Autor: Daniel Jasion · Kontakt: kontakt@drogowiesc.pl</p>
+    <p class="hint">Wersja w przeglądarce 0.1 · wersja próbna · opowieści z 23.10.2026 (ok. 2200)<br>Autor: Daniel Jasion · Kontakt: kontakt@drogowiesc.pl</p>
+    <p>Wersja w przeglądarce działa inaczej niż aplikacja na Androida, dlatego nie wszystkie funkcje mogą tu działać albo działać prawidłowo. Działa tylko przy włączonym ekranie i otwartej stronie, nie przycisza muzyki i nie ma „Podróży” ani „Moich odkryć”.</p>
     <h3>Bezpieczeństwo</h3>
     <p>Nie obsługuj aplikacji podczas prowadzenia. Ustaw ją przed jazdą, a w trakcie korzystaj tylko z głosu. Drogowieść nie jest nawigacją i nie zastępuje znaków drogowych ani przepisów. Wymienione miejsca mogą być prywatne, zamknięte lub niebezpieczne. Wzmianka w aplikacji nie oznacza, że wolno tam wejść.</p>
     <h3>Skąd są opowieści</h3>
@@ -289,6 +364,19 @@ try { const t = JSON.parse(localStorage.getItem('odk_settings') || '{}').theme; 
       <li>Krój Barlow © 2017 The Barlow Project Authors (github.com/jpt/barlow), licencja SIL Open Font License 1.1; plik licencji: <a href="fonty/OFL-Barlow.txt" target="_blank" rel="noopener">OFL-Barlow.txt</a></li>
       <li>Ikony, piktogramy i grafiki: własne</li>
     </ul>
+  </div>
+</details>
+
+<!-- Symulacja tras tylko dla autora: adres z ?dev (jak Drogowiesc-dev.apk). -->
+<details id="dSim" hidden>
+  <summary><svg class="ic"><use href="#i-route"/></svg><span class="t">Symulacja trasy</span><small class="sub">test na komputerze</small></summary>
+  <div>
+    <label>Trasa <select id="simRoute"></select></label>
+    <label>Przyspieszenie czasu
+      <select id="simMult"><option>1</option><option>3</option><option selected>10</option><option>30</option></select>
+    </label>
+    <button id="bSim">Start symulacji</button>
+    <p class="hint">Trasy są przybliżone (odcinki proste). Symulacja zastępuje GPS.</p>
   </div>
 </details>
 </div>
@@ -343,14 +431,45 @@ const ROUTES = [
 const S = Object.assign({
   mode: 'auto', interests: INTERESTS.filter(i => i.id !== 'miasta').map(i => i.id),
   freq: '1', minScore: 3.5, voice: '', rate: 1.0, ai: false, apiKey: '', model: 'claude-opus-5-5', lang: 'pl',
-  theme: 'auto'
+  theme: 'auto', look: 'nocna'
 }, LS.get('settings', {}));
-// Motyw: 'auto' = jak w telefonie (prefers-color-scheme), 'light'/'dark' = wybór ręczny.
-function applyTheme() {
-  if (S.theme === 'light' || S.theme === 'dark') document.documentElement.dataset.theme = S.theme;
-  else delete document.documentElement.dataset.theme;
-  document.querySelectorAll('#sTheme button').forEach(b => { const on = b.dataset.v === S.theme; b.classList.toggle('sel', on); b.setAttribute('aria-checked', on); });
+// „Nocna trasa” domyślna wszędzie (użytkownik 2026-10-23): jednorazowo przestawia też zapisany „Klasyczny”;
+// potem wybór w Ustawieniach jest szanowany. Tak samo jak w aplikacji na Androida.
+if (!LS.get('nocnaDomyslna', false)) { S.look = 'nocna'; LS.set('settings', S); LS.set('nocnaDomyslna', true); }
+// Wysokość słońca w stopniach (przybliżenie, środek Polski) — „Nocna trasa” przy Automatycznym: jasna w dzień.
+function slonceWys(t, lat = 52, lon = 19.4) {
+  const r = Math.PI / 180, d = t / 864e5 - 10957.5, g = (357.529 + 0.98560028 * d) * r, q = 280.459 + 0.98564736 * d;
+  const L = (q + 1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * r, e = (23.439 - 3.6e-7 * d) * r;
+  const dek = Math.asin(Math.sin(e) * Math.sin(L)), ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L));
+  const H = ((280.46061837 + 360.98564736629 * d + lon) * r) - ra;
+  return Math.asin(Math.sin(lat * r) * Math.sin(dek) + Math.cos(lat * r) * Math.cos(dek) * Math.cos(H)) / r;
 }
+// Motyw: 'auto' = jak w telefonie (Klasyczny) albo według słońca (Nocna trasa), 'light'/'dark' = wybór ręczny.
+function applyTheme() {
+  const el = document.documentElement;
+  if (S.theme === 'light' || S.theme === 'dark') el.dataset.theme = S.theme;
+  else delete el.dataset.theme;
+  if (S.look === 'nocna') {
+    el.dataset.look = 'nocna';
+    el.dataset.pora = S.theme === 'light' ? 'dzien' : S.theme === 'dark' ? 'noc' : slonceWys(Date.now()) > 0 ? 'dzien' : 'noc';
+  } else { delete el.dataset.look; delete el.dataset.pora; }
+  document.querySelectorAll('#sTheme button').forEach(b => { const on = b.dataset.v === S.theme; b.classList.toggle('sel', on); b.setAttribute('aria-checked', on); });
+  document.querySelectorAll('#sLook button').forEach(b => { const on = b.dataset.v === S.look; b.classList.toggle('sel', on); b.setAttribute('aria-checked', on); });
+  szerokieKafle();
+}
+setInterval(() => { if (S.look === 'nocna' && S.theme === 'auto') applyTheme(); }, 60000);
+// Kafelki bez dziury (użytkownik 2026-10-22/23): zamknięty kafelek, który w siatce wypadł sam w rzędzie (obok otwartej
+// sekcji na całą szerokość albo jako nieparzysty), rozciąga się na całą szerokość. Liczone z układu, po każdej zmianie.
+function szerokieKafle() {
+  const d = [...document.querySelectorAll('.sections > details')];
+  d.forEach(x => x.classList.remove('szeroki'));
+  if (S.look !== 'nocna') return;
+  const wid = d.filter(x => x.offsetParent);
+  const sam = wid.filter(x => !x.open && !wid.some(y => y !== x && y.offsetTop === x.offsetTop));
+  sam.forEach(x => x.classList.add('szeroki'));
+}
+// Klasy dla animacji „Nocnej trasy”: mowi = lektor czyta, trwa = podróż włączona, ruch = jedziemy (animacje stoją).
+const syncMowi = () => document.documentElement.classList.toggle('mowi', speaking && !paused);
 const icon = (id, cls = 'ic') => `<svg class="${cls}"><use href="#${id}"/></svg>`;
 const PICTO = ['historia', 'sakralne', 'technika', 'natura', 'gory', 'architektura', 'kultura', 'rodzina', 'miasta'];
 function picto(e) {
@@ -905,6 +1024,7 @@ function setPaused(p) {
   paused = p;
   setPauseBtn(p);
   syncJournalButtons();
+  syncMowi();
   if (p) speechSynthesis.cancel();
   else if (resumeSpeech) { const r = resumeSpeech; resumeSpeech = null; r(); }
 }
@@ -923,7 +1043,8 @@ function speak(text) {
     const next = () => {
       if (gen !== speakGen) return res();
       if (paused && !stopSpeech) { if (!resumeSpeech) { i = Math.max(0, i - 1); resumeSpeech = next; } return; }
-      if (i >= parts.length || stopSpeech) { speaking = false; return res(); }
+      if (i >= parts.length || stopSpeech) { speaking = false; syncMowi(); return res(); }
+      syncMowi();
       const u = new SpeechSynthesisUtterance(parts[i++]);
       u.lang = S.lang === 'pl' ? 'pl-PL' : 'en-US';
       const v = voices.find(v => v.voiceURI === S.voice); if (v) u.voice = v;
@@ -1000,11 +1121,19 @@ function showNow(e) {
   const name = e.place || cleanTitle(e.title), sub = e.dirp || '';
   $('#now').innerHTML = `<div class="sign"><div>${icon(picto(e))}<div><b></b><small></small></div></div></div>
     <div class="story"><div class="txt"></div>
-    <div class="meta"><span>${srcLabel(e.src)}</span><span>ciekawość ${e.score}</span>${e.err ? '<span>AI: ' + esc(e.err) + '</span>' : ''}<span>${srcLink(e)}</span></div></div>`;
+    <div class="meta"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><button class="wiecej" aria-expanded="false">cały tekst ▾</button><span>${srcLabel(e.src)}</span><span>ciekawość ${e.score}</span>${e.err ? '<span>AI: ' + esc(e.err) + '</span>' : ''}<span>${srcLink(e)}</span></div></div>`;
   $('#now .sign b').textContent = name.charAt(0).toUpperCase() + name.slice(1);
   $('#now .sign small').textContent = sub;
   $('#now .txt').textContent = e.text;
   syncVotes();
+}
+// Zwinięty tekst opowieści: dotknięcie tekstu albo „cały tekst” rozwija, drugie zwija.
+function przelaczTekst() {
+  const s = $('#now .story'), b = $('#now .wiecej');
+  if (!s || !b) return;
+  const pelny = s.classList.toggle('pelny');
+  b.textContent = pelny ? 'zwiń ▴' : 'cały tekst ▾';
+  b.setAttribute('aria-expanded', pelny);
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function syncVotes() {
@@ -1042,7 +1171,8 @@ function tick() {
   if (sim) stepSim();
   if (!st.pos) { setStatus('Czekam na GPS…'); return; }
   maybeFetch();
-  const m = curMode(), H = horizon(m);
+  const m = curMode(), H = horizon(m), kmh = st.speed * 3.6, hc = document.documentElement.classList;
+  if (kmh > 10) hc.add('ruch'); else if (kmh < 5) hc.remove('ruch');
   inspectNearby(m, H);
   const gap = MODES[m].gap * parseFloat(S.freq) * 1000;
   // Przygotuj z wyprzedzeniem opowieści dla najlepszych kandydatów na horyzoncie ×2.
@@ -1066,6 +1196,7 @@ function setStatus(t) { $('#status').textContent = t; }
 
 async function start() {
   running = true; $('#start').innerHTML = icon('i-stop') + '<span>Zakończ</span>'; $('#start').classList.add('on');
+  document.documentElement.classList.add('trwa');
   speak('Drogowieść włączona.');
   try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   if (!sim) {
@@ -1080,6 +1211,7 @@ async function start() {
 }
 function stop() {
   running = false; $('#start').innerHTML = icon('i-go') + '<span>Start podróży</span>'; $('#start').classList.remove('on');
+  document.documentElement.classList.remove('trwa', 'ruch');
   if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null;
   clearInterval(timer); timer = null; sim = null; $('#bSim').textContent = 'Start symulacji';
   stopSpeech = true; speechSynthesis.cancel(); if (paused) setPaused(false);
@@ -1139,6 +1271,15 @@ function updateMap(H) {
 function initUI() {
   applyTheme();
   $('#sTheme').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; S.theme = b.dataset.v; saveS(); applyTheme(); });
+  $('#sLook').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; S.look = b.dataset.v; saveS(); applyTheme(); });
+  $('#dSim').hidden = !/[?&]dev\b/.test(location.search);
+  // Kafelki: otwiera się jedna sekcja naraz.
+  document.querySelectorAll('.sections > details').forEach(d => d.addEventListener('toggle', () => {
+    if (d.open && S.look === 'nocna') document.querySelectorAll('.sections > details[open]').forEach(o => { if (o !== d) o.open = false; });
+    szerokieKafle();
+  }));
+  window.addEventListener('resize', szerokieKafle);
+  $('#now').addEventListener('click', ev => { if (ev.target.closest('.txt, .wiecej')) przelaczTekst(); });
   $('#sInterests').innerHTML = INTERESTS.map(i => `<label><input type="checkbox" value="${i.id}" ${S.interests.includes(i.id) ? 'checked' : ''}> ${i.label}</label>`).join('');
   $('#sInterests').addEventListener('change', () => { S.interests = [...document.querySelectorAll('#sInterests input:checked')].map(x => x.value); saveS(); });
   const bind = (sel, key, cast = v => v, after) => { const el = $(sel); el.value = S[key]; el.addEventListener('input', () => { S[key] = cast(el.value); saveS(); after && after(); }); };
